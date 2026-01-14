@@ -1,7 +1,10 @@
 import { PrismaClient, Role } from "@prisma/client";
 import crypto from "crypto";
 
-const prisma = new PrismaClient();
+// O PrismaClient precisa receber explicitamente a URL do banco em Prisma 7
+const prisma = new PrismaClient({
+  datasourceUrl: process.env.DATABASE_URL,
+});
 
 function hashPassword(p: string) {
   const salt = crypto.randomBytes(16).toString("hex");

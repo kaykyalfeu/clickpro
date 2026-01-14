@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { verifyLicense } from "@/lib/license";
 
-const prisma = new PrismaClient();
+// O PrismaClient precisa receber explicitamente a URL do banco em Prisma 7
+const prisma = new PrismaClient({
+  datasourceUrl: process.env.DATABASE_URL,
+});
 
 export async function POST(req: Request) {
   const ua = req.headers.get("user-agent") || undefined;
