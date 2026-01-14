@@ -453,6 +453,7 @@
               <input id="assistantId" type="text" placeholder="asst_...">
             </div>
             <button class="btn" id="saveOpenAi">Salvar credenciais</button>
+            <p class="warning">Aviso: a chave fica armazenada em texto simples no navegador. Evite usar em máquinas compartilhadas.</p>
           </div>
         </div>
 
@@ -477,9 +478,9 @@
           <p>Pré-visualize o status local e receba alertas imediatos sobre integrações essenciais.</p>
           <div class="form-grid">
             <div class="row">
-              <div class="tag">● OpenAI configurado</div>
-              <div class="tag">● WhatsApp Business ativo</div>
-              <div class="tag">● Sessão local</div>
+              <div class="tag" id="openAiStatusTag"></div>
+              <div class="tag" id="whatsAppStatusTag"></div>
+              <div class="tag" id="localStatusTag"></div>
             </div>
             <p class="warning" id="statusWarning">Complete os campos obrigatórios para liberar o envio automático.</p>
           </div>
@@ -572,13 +573,18 @@
 
     const statusPill = document.getElementById('statusPill');
     const statusWarning = document.getElementById('statusWarning');
+    const openAiStatusTag = document.getElementById('openAiStatusTag');
+    const whatsAppStatusTag = document.getElementById('whatsAppStatusTag');
+    const localStatusTag = document.getElementById('localStatusTag');
 
     const localMediaKey = 'clickpro_media_library';
     const localMessageKey = 'clickpro_local_messages';
 
     let activePhone = '';
-    let localMessages = JSON.parse(localStorage.getItem(localMessageKey) || '{}');
-    let mediaLibrary = JSON.parse(localStorage.getItem(localMediaKey) || '[]');
+    let localMessages = {};
+    let mediaLibrary = [];
+    let currentPreviewUrls = [];
+    let pollingId = null;
 
     const sections = {
       config: document.getElementById('section-config'),
@@ -587,18 +593,64 @@
       media: document.getElementById('section-media'),
     };
 
+    function safeParseLocalStorage(key, fallback) {
+      const value = localStorage.getItem(key);
+      if (!value) {
+        return fallback;
+      }
+      try {
+        return JSON.parse(value);
+      } catch (error) {
+        console.warn(`Falha ao ler ${key} do localStorage.`, error);
+        return fallback;
+      }
+    }
+
+    function setSectionDisplay(section, show) {
+      if (!show) {
+        section.style.display = 'none';
+        return;
+      }
+      section.style.display = section.classList.contains('grid') ? 'grid' : 'block';
+    }
+
+    function startPolling() {
+      if (pollingId) {
+        return;
+      }
+      pollingId = setInterval(fetchMessages, 5000);
+    }
+
+    function stopPolling() {
+      if (!pollingId) {
+        return;
+      }
+      clearInterval(pollingId);
+      pollingId = null;
+    }
+
     document.querySelectorAll('.nav button').forEach((button) => {
       button.addEventListener('click', () => {
         document.querySelectorAll('.nav button').forEach((btn) => btn.classList.remove('active'));
         button.classList.add('active');
-        Object.values(sections).forEach((section) => (section.style.display = 'none'));
-        sections[button.dataset.section].style.display = 'block';
+        Object.values(sections).forEach((section) => setSectionDisplay(section, false));
+        const activeSection = sections[button.dataset.section];
+        setSectionDisplay(activeSection, true);
+        if (button.dataset.section === 'conversations') {
+          startPolling();
+          fetchMessages();
+        } else {
+          stopPolling();
+        }
       });
     });
 
     function updateStatus() {
       const isOpenAiReady = Boolean(openAiKey.value.trim() && assistantId.value.trim());
       const isWhatsAppReady = Boolean(whatsappNumber.value.trim() && whatsappNumberId.value.trim());
+      openAiStatusTag.textContent = `${isOpenAiReady ? '●' : '○'} OpenAI ${isOpenAiReady ? 'configurado' : 'pendente'}`;
+      whatsAppStatusTag.textContent = `${isWhatsAppReady ? '●' : '○'} WhatsApp Business ${isWhatsAppReady ? 'ativo' : 'pendente'}`;
+      localStatusTag.textContent = '● Sessão local';
       if (isOpenAiReady && isWhatsAppReady) {
         statusPill.textContent = '● Tudo pronto para operar';
         statusPill.style.background = 'rgba(34, 197, 94, 0.2)';
@@ -770,7 +822,29 @@
       files.forEach((file) => {
         const container = document.createElement('div');
         container.className = 'media-preview';
-        container.textContent = file.name;
+        if (file.url && file.type.startsWith('image/')) {
+          const img = document.createElement('img');
+          img.src = file.url;
+          img.alt = file.name;
+          img.style.width = '100%';
+          img.style.borderRadius = '10px';
+          container.appendChild(img);
+        } else if (file.url && file.type.startsWith('video/')) {
+          const video = document.createElement('video');
+          video.src = file.url;
+          video.controls = true;
+          video.style.width = '100%';
+          video.style.borderRadius = '10px';
+          container.appendChild(video);
+        } else if (file.url && file.type.startsWith('audio/')) {
+          const audio = document.createElement('audio');
+          audio.src = file.url;
+          audio.controls = true;
+          audio.style.width = '100%';
+          container.appendChild(audio);
+        } else {
+          container.textContent = file.name;
+        }
         mediaPreview.appendChild(container);
       });
     }
@@ -796,20 +870,21 @@
       });
     }
 
+    function revokePreviewUrls() {
+      currentPreviewUrls.forEach((url) => URL.revokeObjectURL(url));
+      currentPreviewUrls = [];
+    }
+
     function sendMessage() {
       const phone = phoneInput.value.trim();
       const message = messageInput.value.trim();
+      const files = Array.from(mediaInput.files);
       if (!phone || !message) {
         alert('Informe telefone e mensagem.');
         return;
       }
 
-      const attachments = Array.from(mediaInput.files).map((file) => ({
-        name: file.name,
-        type: file.type,
-        url: URL.createObjectURL(file),
-      }));
-      const storageAttachments = attachments.map((file) => ({
+      const storageAttachments = files.map((file) => ({
         name: file.name,
         type: file.type,
       }));
@@ -822,23 +897,28 @@
         role: 'agent',
         content: message,
         phone,
-        attachments,
+        attachments: storageAttachments,
         source: 'Local',
       });
 
       persistLocalMessages();
       persistMedia(storageAttachments);
 
+      const formData = new FormData();
+      formData.append('phone', phone);
+      formData.append('message', message);
+      files.forEach((file) => formData.append('attachments', file));
+
       fetch('/send-message', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, message }),
+        body: formData,
       })
         .then((res) => {
           if (!res.ok) throw new Error('Erro ao enviar');
           messageInput.value = '';
           mediaInput.value = '';
           mediaPreview.innerHTML = '';
+          revokePreviewUrls();
           fetchMessages();
         })
         .catch((err) => {
@@ -847,27 +927,33 @@
     }
 
     mediaInput.addEventListener('change', () => {
-      const files = Array.from(mediaInput.files).map((file) => ({
-        name: file.name,
-        type: file.type,
-        url: URL.createObjectURL(file),
-      }));
+      revokePreviewUrls();
+      const files = Array.from(mediaInput.files).map((file) => {
+        const url = URL.createObjectURL(file);
+        currentPreviewUrls.push(url);
+        return {
+          name: file.name,
+          type: file.type,
+          url,
+        };
+      });
       updateMediaPreview(files);
     });
 
     sendBtn.onclick = sendMessage;
     refreshBtn.onclick = fetchMessages;
 
-    messageInput.addEventListener('keyup', (e) => {
+    messageInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         sendMessage();
       }
     });
 
+    localMessages = safeParseLocalStorage(localMessageKey, {});
+    mediaLibrary = safeParseLocalStorage(localMediaKey, []);
     loadConfig();
     renderMediaLibrary();
-    setInterval(fetchMessages, 5000);
   </script>
 </body>
 </html>
