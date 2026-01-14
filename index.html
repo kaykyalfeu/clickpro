@@ -2,97 +2,798 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>ClikPro WhatsApp Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ClickPro AI - Dashboard WhatsApp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: Arial, sans-serif;
+    :root {
+      color-scheme: dark;
+      --bg: #0b0f1a;
+      --bg-soft: #111827;
+      --panel: #0f172a;
+      --panel-strong: #111c33;
+      --muted: #94a3b8;
+      --text: #f8fafc;
+      --accent: #7c3aed;
+      --accent-2: #38bdf8;
+      --success: #22c55e;
+      --danger: #f43f5e;
+      --warning: #f59e0b;
+      --border: rgba(148, 163, 184, 0.15);
+      --shadow: 0 24px 60px rgba(8, 15, 30, 0.45);
+    }
+
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
-      background: #f4f4f4;
     }
-    #chat {
-      max-width: 600px;
-      margin: 40px auto;
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(circle at top, rgba(124, 58, 237, 0.16), transparent 45%), var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      background: linear-gradient(180deg, #0f172a 0%, #0b1222 100%);
+      padding: 28px 24px;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo img {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
       background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      padding: 6px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
     }
-    .messages {
-      height: 400px;
-      overflow-y: auto;
-      border: 1px solid #ddd;
-      padding: 10px;
-      margin-bottom: 10px;
-      background: #fafafa;
+
+    .logo h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
     }
-    .message {
-      margin-bottom: 10px;
+
+    .logo span {
+      font-size: 0.85rem;
+      color: var(--muted);
     }
-    .message.user {
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .nav button {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid transparent;
+      padding: 12px 14px;
+      border-radius: 12px;
       text-align: left;
-      color: #333;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.2s ease;
     }
+
+    .nav button.active,
+    .nav button:hover {
+      border-color: rgba(124, 58, 237, 0.5);
+      background: rgba(124, 58, 237, 0.12);
+      color: #fff;
+    }
+
+    .sidebar-card {
+      background: var(--panel);
+      padding: 18px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+    }
+
+    .sidebar-card h3 {
+      font-size: 0.95rem;
+      margin-bottom: 10px;
+    }
+
+    .sidebar-card p {
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+
+    .main {
+      padding: 32px 36px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .header-title h2 {
+      font-size: 1.8rem;
+      margin-bottom: 6px;
+    }
+
+    .header-title p {
+      color: var(--muted);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.4);
+      color: #bbf7d0;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--panel);
+      border-radius: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .card h3 {
+      font-size: 1.1rem;
+      margin-bottom: 6px;
+    }
+
+    .card p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    label {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, var(--accent), #4f46e5);
+      color: #fff;
+      border: none;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: rgba(148, 163, 184, 0.15);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+    }
+
+    .conversation-area {
+      display: grid;
+      grid-template-columns: minmax(280px, 360px) 1fr;
+      gap: 20px;
+    }
+
+    .conversation-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 520px;
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+
+    .conversation-item {
+      background: var(--panel-strong);
+      border-radius: 14px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      display: grid;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .conversation-item small {
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+
+    .conversation-item.active {
+      border-color: rgba(56, 189, 248, 0.6);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.4);
+    }
+
+    .chat-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      height: 520px;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .message {
+      max-width: 78%;
+      padding: 12px 16px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.9);
+      line-height: 1.5;
+      font-size: 0.95rem;
+    }
+
+    .message.user {
+      align-self: flex-start;
+      background: rgba(56, 189, 248, 0.12);
+      border-color: rgba(56, 189, 248, 0.25);
+    }
+
     .message.ai {
-      text-align: right;
-      color: #007bff;
+      align-self: flex-end;
+      background: rgba(124, 58, 237, 0.18);
+      border-color: rgba(124, 58, 237, 0.3);
     }
+
     .message.agent {
-      text-align: right;
-      color: #28a745;
+      align-self: flex-end;
+      background: rgba(34, 197, 94, 0.18);
+      border-color: rgba(34, 197, 94, 0.3);
     }
-    input, button {
+
+    .message small {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+
+    .media-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .media-preview {
+      background: rgba(148, 163, 184, 0.1);
+      border-radius: 12px;
       padding: 10px;
-      font-size: 16px;
+      border: 1px dashed rgba(148, 163, 184, 0.3);
+    }
+
+    .composer {
+      display: grid;
+      gap: 12px;
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+    }
+
+    .composer textarea {
+      min-height: 80px;
+    }
+
+    .footer-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .tag {
+      background: rgba(56, 189, 248, 0.2);
+      color: #bae6fd;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 0.75rem;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .warning {
+      color: var(--warning);
+      font-size: 0.8rem;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 1100px) {
+      .conversation-area {
+        grid-template-columns: 1fr;
+      }
+
+      .chat-panel {
+        height: auto;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-between;
+      }
+
+      .nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
     }
   </style>
 </head>
 <body>
-  <div id="chat">
-    <h2>ClikPro Assistente WhatsApp</h2>
-    <div>
-      <label for="phone">Telefone (E.164 sem "+"):</label><br />
-      <input id="phone" type="text" placeholder="5511999999999" style="width: 100%; margin-bottom: 10px;" />
-    </div>
-    <div class="messages" id="messages"></div>
-    <input id="messageInput" type="text" placeholder="Digite sua mensagem..." style="width: 80%;" />
-    <button id="sendBtn">Enviar</button>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="logo">
+        <img src="CLICK%20LEADS%20(3).png" alt="Logo ClickPro">
+        <div>
+          <h1>ClickPro AI</h1>
+          <span>Console Local WhatsApp</span>
+        </div>
+      </div>
+
+      <div class="nav" role="tablist">
+        <button class="active" data-section="config">Configurações</button>
+        <button data-section="training">Treinamento</button>
+        <button data-section="conversations">Conversas</button>
+        <button data-section="media">Mídias</button>
+      </div>
+
+      <div class="sidebar-card">
+        <h3>Status do ambiente</h3>
+        <p>Este painel funciona 100% localmente. As credenciais são salvas apenas neste navegador.</p>
+      </div>
+
+      <div class="sidebar-card">
+        <h3>Dicas rápidas</h3>
+        <p>Use o ID do assistente configurado no OpenAI, informe o número oficial do WhatsApp Business e revise o prompt de treinamento.</p>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header>
+        <div class="header-title">
+          <h2>Dashboard completo de atendimento</h2>
+          <p>Configure tudo em um só lugar e acompanhe as conversas em tempo real.</p>
+        </div>
+        <div class="status-pill" id="statusPill">● Ambiente local pronto</div>
+      </header>
+
+      <section class="grid" id="section-config">
+        <div class="card">
+          <h3>Credenciais OpenAI</h3>
+          <p>Insira a chave de API e o Assistant ID utilizados no atendimento. Estes dados ficam salvos localmente.</p>
+          <div class="form-grid">
+            <div>
+              <label for="openAiKey">OpenAI API Key</label>
+              <input id="openAiKey" type="password" placeholder="sk-...">
+            </div>
+            <div>
+              <label for="assistantId">OpenAI Assistant ID</label>
+              <input id="assistantId" type="text" placeholder="asst_...">
+            </div>
+            <button class="btn" id="saveOpenAi">Salvar credenciais</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>WhatsApp Business (Meta Ads)</h3>
+          <p>Informe o número oficial e o ID do número já configurado no portfólio de anúncios.</p>
+          <div class="form-grid">
+            <div>
+              <label for="whatsappNumber">Número WhatsApp Business</label>
+              <input id="whatsappNumber" type="text" placeholder="5511999999999">
+            </div>
+            <div>
+              <label for="whatsappNumberId">ID do número</label>
+              <input id="whatsappNumberId" type="text" placeholder="123456789">
+            </div>
+            <button class="btn" id="saveWhatsApp">Salvar dados do WhatsApp</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Conexão rápida</h3>
+          <p>Pré-visualize o status local e receba alertas imediatos sobre integrações essenciais.</p>
+          <div class="form-grid">
+            <div class="row">
+              <div class="tag">● OpenAI configurado</div>
+              <div class="tag">● WhatsApp Business ativo</div>
+              <div class="tag">● Sessão local</div>
+            </div>
+            <p class="warning" id="statusWarning">Complete os campos obrigatórios para liberar o envio automático.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid" id="section-training" style="display: none;">
+        <div class="card" style="grid-column: span 2;">
+          <h3>Prompt de treinamento da inteligência</h3>
+          <p>Defina o tom de voz, objetivos e regras que o assistente deve seguir. Use este espaço para treinar o comportamento da IA.</p>
+          <div class="form-grid">
+            <textarea id="trainingPrompt" placeholder="Ex: Você é um especialista em conversão via WhatsApp, sempre cordial e objetivo..."></textarea>
+            <div class="footer-actions">
+              <button class="btn" id="saveTraining">Salvar prompt</button>
+              <button class="btn btn-secondary" id="resetTraining">Limpar</button>
+            </div>
+            <p class="warning">Este prompt é salvo somente neste navegador e pode ser atualizado a qualquer momento.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" id="section-conversations" style="display: none;">
+        <h3>Conversas ativas</h3>
+        <p>Acompanhe o histórico completo. Você pode enviar mensagens manuais e anexar mídia.</p>
+
+        <div class="conversation-area">
+          <div class="conversation-list" id="conversationList"></div>
+          <div class="chat-panel">
+            <div class="chat-messages" id="messages"></div>
+            <div class="composer">
+              <div class="row">
+                <div>
+                  <label for="phone">Telefone (E.164 sem "+")</label>
+                  <input id="phone" type="text" placeholder="5511999999999">
+                </div>
+                <div>
+                  <label for="messageTopic">Etiqueta da conversa</label>
+                  <input id="messageTopic" type="text" placeholder="Ex: Campanha Black Friday">
+                </div>
+              </div>
+              <div>
+                <label for="messageInput">Mensagem</label>
+                <textarea id="messageInput" placeholder="Digite sua mensagem..."></textarea>
+              </div>
+              <div>
+                <label for="mediaInput">Adicionar imagem, vídeo ou áudio</label>
+                <input id="mediaInput" type="file" accept="image/*,video/*,audio/*" multiple>
+                <div class="media-grid" id="mediaPreview"></div>
+              </div>
+              <div class="footer-actions">
+                <button class="btn" id="sendBtn">Enviar agora</button>
+                <button class="btn btn-secondary" id="refreshBtn">Atualizar mensagens</button>
+              </div>
+              <small class="warning">Os anexos ficam registrados localmente para consulta rápida.</small>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid" id="section-media" style="display: none;">
+        <div class="card">
+          <h3>Biblioteca de mídias</h3>
+          <p>Veja tudo o que foi anexado nas conversas locais. Ideal para revisão rápida com o cliente.</p>
+          <div class="media-grid" id="libraryPreview"></div>
+        </div>
+        <div class="card">
+          <h3>Boas práticas</h3>
+          <p>Mantenha vídeos curtos e imagens otimizadas. Arquivos são armazenados apenas localmente neste painel.</p>
+        </div>
+      </section>
+    </main>
   </div>
+
   <script>
     const messagesEl = document.getElementById('messages');
     const phoneInput = document.getElementById('phone');
     const messageInput = document.getElementById('messageInput');
     const sendBtn = document.getElementById('sendBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const mediaInput = document.getElementById('mediaInput');
+    const mediaPreview = document.getElementById('mediaPreview');
+    const libraryPreview = document.getElementById('libraryPreview');
+    const conversationList = document.getElementById('conversationList');
 
-    sendBtn.onclick = sendMessage;
-    messageInput.addEventListener('keyup', (e) => {
-      if (e.key === 'Enter') {
-        sendMessage();
+    const openAiKey = document.getElementById('openAiKey');
+    const assistantId = document.getElementById('assistantId');
+    const whatsappNumber = document.getElementById('whatsappNumber');
+    const whatsappNumberId = document.getElementById('whatsappNumberId');
+    const trainingPrompt = document.getElementById('trainingPrompt');
+
+    const statusPill = document.getElementById('statusPill');
+    const statusWarning = document.getElementById('statusWarning');
+
+    const localMediaKey = 'clickpro_media_library';
+    const localMessageKey = 'clickpro_local_messages';
+
+    let activePhone = '';
+    let localMessages = JSON.parse(localStorage.getItem(localMessageKey) || '{}');
+    let mediaLibrary = JSON.parse(localStorage.getItem(localMediaKey) || '[]');
+
+    const sections = {
+      config: document.getElementById('section-config'),
+      training: document.getElementById('section-training'),
+      conversations: document.getElementById('section-conversations'),
+      media: document.getElementById('section-media'),
+    };
+
+    document.querySelectorAll('.nav button').forEach((button) => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('.nav button').forEach((btn) => btn.classList.remove('active'));
+        button.classList.add('active');
+        Object.values(sections).forEach((section) => (section.style.display = 'none'));
+        sections[button.dataset.section].style.display = 'block';
+      });
+    });
+
+    function updateStatus() {
+      const isOpenAiReady = Boolean(openAiKey.value.trim() && assistantId.value.trim());
+      const isWhatsAppReady = Boolean(whatsappNumber.value.trim() && whatsappNumberId.value.trim());
+      if (isOpenAiReady && isWhatsAppReady) {
+        statusPill.textContent = '● Tudo pronto para operar';
+        statusPill.style.background = 'rgba(34, 197, 94, 0.2)';
+        statusPill.style.borderColor = 'rgba(34, 197, 94, 0.5)';
+        statusWarning.textContent = 'Integrações essenciais configuradas.';
+        statusWarning.style.color = 'var(--success)';
+      } else {
+        statusPill.textContent = '● Configure integrações principais';
+        statusPill.style.background = 'rgba(245, 158, 11, 0.2)';
+        statusPill.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+        statusWarning.textContent = 'Complete os campos obrigatórios para liberar o envio automático.';
+        statusWarning.style.color = 'var(--warning)';
       }
+    }
+
+    function saveConfig() {
+      localStorage.setItem('clickpro_openai_key', openAiKey.value.trim());
+      localStorage.setItem('clickpro_assistant_id', assistantId.value.trim());
+      localStorage.setItem('clickpro_whatsapp_number', whatsappNumber.value.trim());
+      localStorage.setItem('clickpro_whatsapp_number_id', whatsappNumberId.value.trim());
+      localStorage.setItem('clickpro_training_prompt', trainingPrompt.value.trim());
+      updateStatus();
+    }
+
+    function loadConfig() {
+      openAiKey.value = localStorage.getItem('clickpro_openai_key') || '';
+      assistantId.value = localStorage.getItem('clickpro_assistant_id') || '';
+      whatsappNumber.value = localStorage.getItem('clickpro_whatsapp_number') || '';
+      whatsappNumberId.value = localStorage.getItem('clickpro_whatsapp_number_id') || '';
+      trainingPrompt.value = localStorage.getItem('clickpro_training_prompt') || '';
+      updateStatus();
+    }
+
+    document.getElementById('saveOpenAi').addEventListener('click', () => {
+      saveConfig();
+      alert('Credenciais OpenAI salvas localmente.');
+    });
+
+    document.getElementById('saveWhatsApp').addEventListener('click', () => {
+      saveConfig();
+      alert('Dados do WhatsApp salvos localmente.');
+    });
+
+    document.getElementById('saveTraining').addEventListener('click', () => {
+      saveConfig();
+      alert('Prompt de treinamento salvo localmente.');
+    });
+
+    document.getElementById('resetTraining').addEventListener('click', () => {
+      trainingPrompt.value = '';
+      saveConfig();
     });
 
     function renderMessages(msgs) {
       messagesEl.innerHTML = '';
+      if (!msgs.length) {
+        const empty = document.createElement('div');
+        empty.className = 'message';
+        empty.textContent = 'Nenhuma conversa encontrada para este número.';
+        messagesEl.appendChild(empty);
+        return;
+      }
       msgs.forEach((m) => {
         const div = document.createElement('div');
-        div.className = 'message ' + m.role;
-        let prefix = '';
-        if (m.role === 'user') prefix = 'Usuário: ';
-        else if (m.role === 'ai') prefix = 'Assistente: ';
-        else prefix = 'Você: ';
-        div.textContent = prefix + m.content;
+        div.className = `message ${m.role}`;
+        div.textContent = m.content;
+        if (m.attachments && m.attachments.length) {
+          const grid = document.createElement('div');
+          grid.className = 'media-grid';
+          m.attachments.forEach((file) => {
+            const container = document.createElement('div');
+            container.className = 'media-preview';
+            if (file.url && file.type.startsWith('image/')) {
+              const img = document.createElement('img');
+              img.src = file.url;
+              img.alt = file.name;
+              img.style.width = '100%';
+              img.style.borderRadius = '10px';
+              container.appendChild(img);
+            } else if (file.url && file.type.startsWith('video/')) {
+              const video = document.createElement('video');
+              video.src = file.url;
+              video.controls = true;
+              video.style.width = '100%';
+              video.style.borderRadius = '10px';
+              container.appendChild(video);
+            } else if (file.url && file.type.startsWith('audio/')) {
+              const audio = document.createElement('audio');
+              audio.src = file.url;
+              audio.controls = true;
+              audio.style.width = '100%';
+              container.appendChild(audio);
+            } else {
+              container.textContent = file.name;
+            }
+            grid.appendChild(container);
+          });
+          div.appendChild(grid);
+        }
+        const meta = document.createElement('small');
+        meta.textContent = m.source || 'WhatsApp';
+        div.appendChild(meta);
         messagesEl.appendChild(div);
       });
       messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
+    function buildConversationList(messages) {
+      const phones = Array.from(new Set(messages.map((msg) => msg.phone)));
+      conversationList.innerHTML = '';
+      phones.forEach((phone) => {
+        const item = document.createElement('div');
+        item.className = `conversation-item ${phone === activePhone ? 'active' : ''}`;
+        const title = document.createElement('strong');
+        title.textContent = phone;
+        const preview = messages.find((msg) => msg.phone === phone);
+        const small = document.createElement('small');
+        small.textContent = preview ? preview.content.slice(0, 40) : 'Sem mensagens';
+        item.appendChild(title);
+        item.appendChild(small);
+        item.addEventListener('click', () => {
+          phoneInput.value = phone;
+          activePhone = phone;
+          fetchMessages();
+          document.querySelectorAll('.conversation-item').forEach((el) => el.classList.remove('active'));
+          item.classList.add('active');
+        });
+        conversationList.appendChild(item);
+      });
+    }
+
+    function mergeMessages(remoteMessages, phone) {
+      const local = (localMessages[phone] || []).map((msg) => ({ ...msg, source: 'Local' }));
+      return [...remoteMessages, ...local];
+    }
+
+    function persistLocalMessages() {
+      const sanitized = Object.entries(localMessages).reduce((acc, [phone, messages]) => {
+        acc[phone] = messages.map((msg) => ({
+          ...msg,
+          attachments: msg.attachments
+            ? msg.attachments.map((file) => ({ name: file.name, type: file.type }))
+            : [],
+        }));
+        return acc;
+      }, {});
+      localStorage.setItem(localMessageKey, JSON.stringify(sanitized));
+    }
+
     function fetchMessages() {
       const phone = phoneInput.value.trim();
-      if (!phone) return;
-      fetch('/messages?phone=' + phone)
+      if (!phone) {
+        renderMessages([]);
+        return;
+      }
+      activePhone = phone;
+      fetch(`/messages?phone=${phone}`)
         .then((res) => res.json())
-        .then(renderMessages)
+        .then((remoteMessages) => {
+          const merged = mergeMessages(remoteMessages, phone);
+          renderMessages(merged);
+          buildConversationList(merged);
+        })
         .catch((err) => console.error(err));
+    }
+
+    function updateMediaPreview(files) {
+      mediaPreview.innerHTML = '';
+      files.forEach((file) => {
+        const container = document.createElement('div');
+        container.className = 'media-preview';
+        container.textContent = file.name;
+        mediaPreview.appendChild(container);
+      });
+    }
+
+    function persistMedia(files) {
+      const sanitized = files.map((file) => ({ name: file.name, type: file.type }));
+      mediaLibrary = [...mediaLibrary, ...sanitized];
+      localStorage.setItem(localMediaKey, JSON.stringify(mediaLibrary));
+      renderMediaLibrary();
+    }
+
+    function renderMediaLibrary() {
+      libraryPreview.innerHTML = '';
+      if (!mediaLibrary.length) {
+        libraryPreview.innerHTML = '<p class="warning">Nenhuma mídia anexada ainda.</p>';
+        return;
+      }
+      mediaLibrary.forEach((file) => {
+        const container = document.createElement('div');
+        container.className = 'media-preview';
+        container.textContent = file.name;
+        libraryPreview.appendChild(container);
+      });
     }
 
     function sendMessage() {
@@ -102,6 +803,32 @@
         alert('Informe telefone e mensagem.');
         return;
       }
+
+      const attachments = Array.from(mediaInput.files).map((file) => ({
+        name: file.name,
+        type: file.type,
+        url: URL.createObjectURL(file),
+      }));
+      const storageAttachments = attachments.map((file) => ({
+        name: file.name,
+        type: file.type,
+      }));
+
+      if (!localMessages[phone]) {
+        localMessages[phone] = [];
+      }
+
+      localMessages[phone].push({
+        role: 'agent',
+        content: message,
+        phone,
+        attachments,
+        source: 'Local',
+      });
+
+      persistLocalMessages();
+      persistMedia(storageAttachments);
+
       fetch('/send-message', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -110,6 +837,8 @@
         .then((res) => {
           if (!res.ok) throw new Error('Erro ao enviar');
           messageInput.value = '';
+          mediaInput.value = '';
+          mediaPreview.innerHTML = '';
           fetchMessages();
         })
         .catch((err) => {
@@ -117,8 +846,28 @@
         });
     }
 
-    // Atualiza o chat a cada 3 segundos
-    setInterval(fetchMessages, 3000);
+    mediaInput.addEventListener('change', () => {
+      const files = Array.from(mediaInput.files).map((file) => ({
+        name: file.name,
+        type: file.type,
+        url: URL.createObjectURL(file),
+      }));
+      updateMediaPreview(files);
+    });
+
+    sendBtn.onclick = sendMessage;
+    refreshBtn.onclick = fetchMessages;
+
+    messageInput.addEventListener('keyup', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    loadConfig();
+    renderMediaLibrary();
+    setInterval(fetchMessages, 5000);
   </script>
 </body>
 </html>
