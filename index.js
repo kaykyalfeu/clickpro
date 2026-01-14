@@ -27,6 +27,48 @@ const fetch = global.fetch;
 // }
 const messages = [];
 
+function parseMultipartFormData(body, boundary) {
+  const result = { fields: {}, files: [] };
+  const boundaryText = `--${boundary}`;
+  const parts = body.split(boundaryText).slice(1, -1);
+  parts.forEach((part) => {
+    const cleaned = part.trim();
+    if (!cleaned) {
+      return;
+    }
+    const [rawHeaders, ...rest] = cleaned.split('\r\n\r\n');
+    if (!rawHeaders || !rest.length) {
+      return;
+    }
+    const content = rest.join('\r\n\r\n').replace(/\r\n$/, '');
+    const headerLines = rawHeaders.split('\r\n');
+    const headers = headerLines.reduce((acc, line) => {
+      const [name, value] = line.split(': ');
+      if (name && value) {
+        acc[name.toLowerCase()] = value;
+      }
+      return acc;
+    }, {});
+    const disposition = headers['content-disposition'] || '';
+    const nameMatch = disposition.match(/name="([^"]+)"/);
+    const filenameMatch = disposition.match(/filename="([^"]+)"/);
+    const fieldName = nameMatch ? nameMatch[1] : '';
+    if (!fieldName) {
+      return;
+    }
+    if (filenameMatch) {
+      result.files.push({
+        field: fieldName,
+        name: filenameMatch[1],
+        type: headers['content-type'] || 'application/octet-stream',
+      });
+    } else {
+      result.fields[fieldName] = content;
+    }
+  });
+  return result;
+}
+
 /**
  * Envia uma mensagem para um telefone via API do WhatsApp Cloud.
  * Necessita das variáveis de ambiente WHATSAPP_TOKEN e
@@ -180,19 +222,37 @@ const server = http.createServer((req, res) => {
 
   // Enviar mensagem manualmente (POST /send-message)
   if (req.method === 'POST' && path === 'send-message') {
+    const contentType = req.headers['content-type'] || '';
     let body = '';
     req.on('data', (chunk) => {
       body += chunk;
     });
     req.on('end', () => {
       try {
-        const { phone, message } = JSON.parse(body);
+        let phone = '';
+        let message = '';
+        let attachments = [];
+        if (contentType.includes('multipart/form-data')) {
+          const boundaryMatch = contentType.match(/boundary=(.+)$/);
+          const boundary = boundaryMatch ? boundaryMatch[1] : '';
+          const payload = parseMultipartFormData(body, boundary);
+          phone = payload.fields.phone || '';
+          message = payload.fields.message || '';
+          attachments = payload.files.map((file) => ({
+            name: file.name,
+            type: file.type,
+          }));
+        } else {
+          const payload = JSON.parse(body);
+          phone = payload.phone;
+          message = payload.message;
+        }
         if (!phone || !message) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'phone e message são obrigatórios' }));
           return;
         }
-        messages.push({ role: 'agent', content: message, phone });
+        messages.push({ role: 'agent', content: message, phone, attachments });
         sendWhatsAppMessage(phone, message).then(() => {
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ success: true }));
