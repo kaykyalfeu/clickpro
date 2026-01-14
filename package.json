@@ -4,9 +4,7 @@
   "description": "Integração local com a API do WhatsApp Cloud para ClikPro.",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "build": "pkg . --targets node18-linux-x64 --out-path dist",
-    "build:win": "pkg index.js --targets node18-win-x64 --output dist/ClickPro.exe"
+    "start": "node index.js"
   },
   "license": "ISC",
   "bin": {
