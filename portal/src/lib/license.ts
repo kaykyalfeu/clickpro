@@ -43,5 +43,5 @@ export function verifyLicense(token: string, secret: string) {
   if (Number.isNaN(exp)) return { ok: false, reason: "BAD_EXPIRES" as const };
   if (now > exp) return { ok: false, reason: "EXPIRED" as const };
 
-  return { ok: true, payload };
+  return { ok: true as const, payload };
 }
