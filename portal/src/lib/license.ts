@@ -26,7 +26,11 @@ export function signLicense(payload: LicensePayload, secret: string) {
   return `${data}.${s}`;
 }
 
-export function verifyLicense(token: string, secret: string) {
+export type VerifyLicenseResult =
+  | { ok: false; reason: "INVALID_FORMAT" | "BAD_SIGNATURE" | "BAD_EXPIRES" | "EXPIRED" }
+  | { ok: true; payload: LicensePayload };
+
+export function verifyLicense(token: string, secret: string): VerifyLicenseResult {
   const parts = token.split(".");
   if (parts.length !== 3) return { ok: false, reason: "INVALID_FORMAT" as const };
 
