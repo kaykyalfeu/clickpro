@@ -1,18 +1,18 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 import crypto from "crypto";
-
-// TODO: Import Prisma client for database persistence
-// import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
+import { authOptions, isSuperAdmin, getSessionClientId } from "@/lib/auth";
 
 interface GenerateLicenseRequest {
-  customerName?: string;
-  email?: string;
+  clientId?: string;
+  plan?: string;
   expiresInDays: number;
-  notes?: string;
+  features?: Record<string, unknown>;
+  limits?: Record<string, unknown>;
 }
 
 function generateLicenseKey(): string {
-  // Generate a unique license key in format: XXXX-XXXX-XXXX-XXXX
   const segments: string[] = [];
   for (let i = 0; i < 4; i++) {
     const segment = crypto.randomBytes(2).toString("hex").toUpperCase();
@@ -23,9 +23,17 @@ function generateLicenseKey(): string {
 
 export async function POST(req: Request) {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user) {
+      return NextResponse.json(
+        { ok: false, error: "Não autorizado" },
+        { status: 401 }
+      );
+    }
+
     const body = (await req.json()) as GenerateLicenseRequest;
 
-    // Validate required fields
     if (
       !body.expiresInDays ||
       body.expiresInDays < 1 ||
@@ -37,35 +45,63 @@ export async function POST(req: Request) {
       );
     }
 
-    // Generate license key
-    const licenseKey = generateLicenseKey();
+    // Determine clientId based on role
+    let targetClientId: string | null;
 
-    // Calculate dates
-    const issuedAt = new Date().toISOString();
+    if (isSuperAdmin(session)) {
+      // SUPER_ADMIN can specify any clientId
+      targetClientId = body.clientId || null;
+    } else {
+      // CLIENT_ADMIN/CLIENT_USER use their own clientId (ignore body.clientId)
+      targetClientId = getSessionClientId(session);
+    }
+
+    if (!targetClientId) {
+      return NextResponse.json(
+        { ok: false, error: "clientId é obrigatório" },
+        { status: 400 }
+      );
+    }
+
+    // Verify client exists
+    const client = await prisma.client.findUnique({
+      where: { id: targetClientId },
+    });
+
+    if (!client) {
+      return NextResponse.json(
+        { ok: false, error: "Cliente não encontrado" },
+        { status: 404 }
+      );
+    }
+
+    const licenseKey = generateLicenseKey();
     const expiresAt = new Date(
       Date.now() + body.expiresInDays * 24 * 60 * 60 * 1000
-    ).toISOString();
+    );
 
-    // TODO: Persist to database using Prisma
-    // await prisma.license.create({
-    //   data: {
-    //     token: licenseKey,
-    //     clientId: "...", // Need to create or lookup client
-    //     plan: "standard",
-    //     expiresAt: new Date(expiresAt),
-    //     features: {},
-    //     limits: {},
-    //   },
-    // });
-
-    // TODO: Store customer metadata
-    // customerName, email, notes
+    const license = await prisma.license.create({
+      data: {
+        token: licenseKey,
+        clientId: targetClientId,
+        plan: body.plan || "standard",
+        expiresAt,
+        features: body.features || {},
+        limits: body.limits || {},
+      },
+      include: {
+        client: true,
+      },
+    });
 
     return NextResponse.json({
       ok: true,
-      licenseKey,
-      issuedAt,
-      expiresAt,
+      licenseKey: license.token,
+      clientId: license.clientId,
+      clientName: license.client?.name ?? client.name,
+      plan: license.plan,
+      issuedAt: license.createdAt.toISOString(),
+      expiresAt: license.expiresAt.toISOString(),
     });
   } catch (error) {
     console.error("License generation error:", error);
