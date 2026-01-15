@@ -1,160 +1,1476 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-  <meta charset="UTF-8" />
-  <title>ClickPro • Login</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ClickPro AI - Dashboard WhatsApp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
-    body {
+    :root {
+      color-scheme: dark;
+      --bg: #0b0f1a;
+      --bg-soft: #111827;
+      --panel: #0f172a;
+      --panel-strong: #111c33;
+      --muted: #94a3b8;
+      --text: #f8fafc;
+      --accent: #7c3aed;
+      --accent-2: #38bdf8;
+      --success: #22c55e;
+      --danger: #f43f5e;
+      --warning: #f59e0b;
+      --border: rgba(148, 163, 184, 0.15);
+      --shadow: 0 24px 60px rgba(8, 15, 30, 0.45);
+    }
+
+    * {
+      box-sizing: border-box;
       margin: 0;
-      height: 100vh;
-      background: #000;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(circle at top, rgba(124, 58, 237, 0.16), transparent 45%), var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      background: linear-gradient(180deg, #0f172a 0%, #0b1222 100%);
+      padding: 28px 24px;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo img {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      background: #fff;
+      padding: 6px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+    }
+
+    .logo h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .logo span {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .nav button {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid transparent;
+      padding: 12px 14px;
+      border-radius: 12px;
+      text-align: left;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .nav button.active,
+    .nav button:hover {
+      border-color: rgba(124, 58, 237, 0.5);
+      background: rgba(124, 58, 237, 0.12);
       color: #fff;
     }
-    .container {
-      display: flex;
-      height: 100vh;
+
+    .sidebar-card {
+      background: var(--panel);
+      padding: 18px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
     }
-    .left {
-      width: 50%;
-      padding: 80px;
-      background: linear-gradient(to bottom, #6d28d9, #4c1d95, #000);
-    }
-    .brand-logo {
-      width: 72px;
-      height: 72px;
-      border-radius: 999px;
-      object-fit: cover;
-      border: 2px solid rgba(255,255,255,.25);
-      box-shadow: 0 12px 30px rgba(0,0,0,.35);
-      margin-bottom: 24px;
-    }
-    .left h1 {
-      font-size: 36px;
+
+    .sidebar-card h3 {
+      font-size: 0.95rem;
       margin-bottom: 10px;
     }
-    .subtitle {
-      color: #d1d5db;
-      margin-bottom: 40px;
-      max-width: 420px;
+
+    .sidebar-card p {
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.5;
     }
-    .steps .step {
-      background: rgba(255,255,255,0.08);
-      padding: 16px;
-      border-radius: 12px;
-      margin-bottom: 14px;
+
+    .main {
+      padding: 32px 36px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
     }
-    .steps .step strong {
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .header-title h2 {
+      font-size: 1.8rem;
+      margin-bottom: 6px;
+    }
+
+    .header-title p {
+      color: var(--muted);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.4);
+      color: #bbf7d0;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--panel);
+      border-radius: 20px;
+      padding: 22px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .card h3 {
+      font-size: 1.1rem;
+      margin-bottom: 6px;
+    }
+
+    .card p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    label {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 6px;
       display: block;
     }
-    .right {
-      width: 50%;
+
+    input, textarea, select {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, var(--accent), #4f46e5);
+      color: #fff;
+      border: none;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: rgba(148, 163, 184, 0.15);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+    }
+
+    .conversation-area {
+      display: grid;
+      grid-template-columns: minmax(280px, 360px) 1fr;
+      gap: 20px;
+    }
+
+    .conversation-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 520px;
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+
+    .conversation-item {
+      background: var(--panel-strong);
+      border-radius: 14px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      display: grid;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .conversation-item small {
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+
+    .conversation-item.active {
+      border-color: rgba(56, 189, 248, 0.6);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.4);
+    }
+
+    .chat-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      height: 520px;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .message {
+      max-width: 78%;
+      padding: 12px 16px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.9);
+      line-height: 1.5;
+      font-size: 0.95rem;
+    }
+
+    .message.user {
+      align-self: flex-start;
+      background: rgba(56, 189, 248, 0.12);
+      border-color: rgba(56, 189, 248, 0.25);
+    }
+
+    .message.ai {
+      align-self: flex-end;
+      background: rgba(124, 58, 237, 0.18);
+      border-color: rgba(124, 58, 237, 0.3);
+    }
+
+    .message.agent {
+      align-self: flex-end;
+      background: rgba(34, 197, 94, 0.18);
+      border-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .message small {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+
+    .media-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .media-preview {
+      background: rgba(148, 163, 184, 0.1);
+      border-radius: 12px;
+      padding: 10px;
+      border: 1px dashed rgba(148, 163, 184, 0.3);
+    }
+
+    .composer {
+      display: grid;
+      gap: 12px;
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+    }
+
+    .composer textarea {
+      min-height: 80px;
+    }
+
+    .footer-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .tag {
+      background: rgba(56, 189, 248, 0.2);
+      color: #bae6fd;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 0.75rem;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .warning {
+      color: var(--warning);
+      font-size: 0.8rem;
+      margin-top: 8px;
+    }
+
+    .login-screen {
+      min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #000;
+      padding: 24px;
     }
-    .card {
-      width: 380px;
-      background: #0b0b0b;
-      border: 1px solid #27272a;
-      padding: 32px;
-      border-radius: 16px;
+
+    .login-card {
+      width: min(420px, 100%);
+      background: var(--panel);
+      border-radius: 20px;
+      padding: 28px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 16px;
     }
-    .card h2 {
-      margin-bottom: 6px;
+
+    .login-card h2 {
+      font-size: 1.4rem;
     }
-    .card p {
-      color: #9ca3af;
-      margin-bottom: 24px;
+
+    .login-card p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.5;
     }
-    label {
-      font-size: 12px;
-      color: #9ca3af;
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 20;
     }
-    input {
+
+    .modal {
+      width: min(720px, 100%);
+      background: var(--panel);
+      border-radius: 20px;
+      padding: 28px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 18px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .step-pill {
+      font-size: 0.75rem;
+      color: #cbd5f5;
+      background: rgba(124, 58, 237, 0.15);
+      border: 1px solid rgba(124, 58, 237, 0.4);
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .copy-area {
       width: 100%;
+      border-radius: 12px;
+      border: 1px dashed rgba(148, 163, 184, 0.3);
       padding: 12px;
-      margin: 6px 0 16px;
-      border-radius: 8px;
-      border: 1px solid #27272a;
-      background: #18181b;
-      color: #fff;
+      background: rgba(15, 23, 42, 0.6);
+      font-family: "Inter", sans-serif;
+      font-size: 0.85rem;
+      color: #e2e8f0;
+      white-space: pre-line;
     }
-    button {
-      width: 100%;
-      height: 44px;
-      background: #fff;
-      color: #000;
-      font-weight: 700;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
+
+    .helper-text {
+      color: var(--muted);
+      font-size: 0.85rem;
     }
-    small {
-      display: block;
-      margin-top: 14px;
-      text-align: center;
-      color: #6b7280;
+
+    @media (max-width: 1100px) {
+      .conversation-area {
+        grid-template-columns: 1fr;
+      }
+
+      .chat-panel {
+        height: auto;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-between;
+      }
+
+      .nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
     }
   </style>
 </head>
 <body>
-
-<div class="container">
-  <div class="left">
-    <img src="/CLICK%20LEADS%20(3).png" class="brand-logo" alt="ClickPro">
-    <h1>Bem-vindo ao ClickPro</h1>
-    <p class="subtitle">
-      Disparador inteligente de WhatsApp com IA, rodando localmente no seu computador.
-    </p>
-
-    <div class="steps">
-      <div class="step"><strong>1. Login</strong>Acesse o painel</div>
-      <div class="step"><strong>2. OpenAI</strong>Configure a IA</div>
-      <div class="step"><strong>3. WhatsApp</strong>Conecte a API oficial</div>
-      <div class="step"><strong>4. Webhook</strong>Finalize a integração</div>
+  <div class="login-screen" id="loginScreen">
+    <div class="login-card">
+      <h2>Entrar no painel ClickPro</h2>
+      <p id="loginSubtitle">Defina a senha de acesso local para continuar.</p>
+      <div class="form-grid">
+        <div id="loginEmailField">
+          <label for="loginEmail">Email (opcional)</label>
+          <input id="loginEmail" type="email" placeholder="voce@empresa.com">
+        </div>
+        <div>
+          <label for="loginPassword">Senha do painel</label>
+          <input id="loginPassword" type="password" placeholder="Digite sua senha">
+        </div>
+        <button class="btn" id="loginSubmit">Continuar</button>
+        <small class="warning" id="loginMessage" style="display:none;"></small>
+      </div>
     </div>
   </div>
 
-  <div class="right">
-    <div class="card">
-      <h2>Entrar no ClickPro</h2>
-      <p>Acesse o painel de disparos e conversas</p>
-
-      <label>Email</label>
-      <input type="email" id="email" placeholder="seu@email.com">
-
-      <label>Senha</label>
-      <input type="password" id="password" placeholder="••••••••">
-
-      <button onclick="login()">Entrar</button>
-
-      <small>Primeiro acesso? A senha é criada na primeira configuração.</small>
+  <div class="modal-backdrop" id="wizardBackdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <h3 id="wizardTitle">Configuração inicial</h3>
+          <p class="helper-text" id="wizardSubtitle">Vamos configurar seu ambiente em poucas etapas.</p>
+        </div>
+        <span class="step-pill" id="wizardStepPill">Etapa 1 de 3</span>
+      </div>
+      <div id="wizardStepOpenAi">
+        <h4>OpenAI</h4>
+        <p class="helper-text">Informe as credenciais do assistente e teste antes de prosseguir.</p>
+        <div class="form-grid">
+          <div>
+            <label for="wizardOpenAiKey">OpenAI API Key</label>
+            <input id="wizardOpenAiKey" type="password" placeholder="sk-...">
+          </div>
+          <div>
+            <label for="wizardAssistantId">OpenAI Assistant ID</label>
+            <input id="wizardAssistantId" type="text" placeholder="asst_...">
+          </div>
+          <div>
+            <label for="wizardCommandPrompt">Command Prompt</label>
+            <textarea id="wizardCommandPrompt" placeholder="Defina o comportamento do assistente..."></textarea>
+          </div>
+          <div class="modal-actions">
+            <button class="btn btn-secondary" id="testOpenAi">Testar OpenAI</button>
+            <button class="btn" id="nextWizard">Próximo</button>
+          </div>
+          <small class="warning" id="wizardOpenAiMessage" style="display:none;"></small>
+        </div>
+      </div>
+      <div id="wizardStepWhatsApp" style="display:none;">
+        <h4>WhatsApp Cloud</h4>
+        <p class="helper-text">Cadastre o token e o ID do número configurado na Meta.</p>
+        <div class="form-grid">
+          <div>
+            <label for="wizardWhatsAppToken">WhatsApp Token</label>
+            <input id="wizardWhatsAppToken" type="password" placeholder="EAAG...">
+          </div>
+          <div>
+            <label for="wizardPhoneNumberId">Phone Number ID</label>
+            <input id="wizardPhoneNumberId" type="text" placeholder="123456789">
+          </div>
+          <div>
+            <label for="wizardCloudNumber">Cloud Number (E.164)</label>
+            <input id="wizardCloudNumber" type="text" placeholder="+5511999999999">
+          </div>
+          <div class="modal-actions">
+            <button class="btn btn-secondary" id="testWhatsApp">Testar WhatsApp</button>
+            <button class="btn" id="finishWizard">Salvar e continuar</button>
+          </div>
+          <small class="warning" id="wizardWhatsAppMessage" style="display:none;"></small>
+        </div>
+      </div>
+      <div id="wizardStepWebhook" style="display:none;">
+        <h4>Webhook (Meta)</h4>
+        <p class="helper-text">Use os dados abaixo para completar a validação no Meta Developers.</p>
+        <div class="form-grid">
+          <div>
+            <label for="wizardVerifyToken">VERIFY_TOKEN</label>
+            <input id="wizardVerifyToken" type="text" readonly>
+          </div>
+          <div>
+            <label for="wizardWebhookUrl">Webhook URL pública</label>
+            <input id="wizardWebhookUrl" type="text" placeholder="https://sua-url-publica">
+            <small class="helper-text">Opcional: salve a URL pública (ngrok/cloudflared) para referência.</small>
+          </div>
+          <div class="copy-area" id="webhookInstructions"></div>
+          <div class="modal-actions">
+            <button class="btn btn-secondary" id="copyWebhookInstructions">Copiar instruções</button>
+            <button class="btn" id="closeWizard">Concluir</button>
+          </div>
+          <small class="warning" id="wizardWebhookMessage" style="display:none;"></small>
+        </div>
+        <div class="card" style="margin-top: 16px;">
+          <h4>Configuração concluída</h4>
+          <p class="helper-text">Resumo final das credenciais essenciais para referência rápida.</p>
+          <div class="form-grid">
+            <div class="row">
+              <div>
+                <label>Assistant ID</label>
+                <input id="summaryAssistantId" type="text" readonly>
+              </div>
+              <div>
+                <label>Phone Number ID</label>
+                <input id="summaryPhoneNumberId" type="text" readonly>
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <label>Cloud Number</label>
+                <input id="summaryCloudNumber" type="text" readonly>
+              </div>
+              <div>
+                <label>Webhook URL pública</label>
+                <input id="summaryWebhookUrl" type="text" readonly>
+              </div>
+            </div>
+            <div class="modal-actions">
+              <button class="btn btn-secondary" id="copyWebhookInstructionsAgain">Copiar instruções novamente</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-</div>
 
-<script>
-async function login() {
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
+  <div class="app" id="appContainer" style="display:none;">
+    <aside class="sidebar">
+      <div class="logo">
+        <img src="CLICK%20LEADS%20(3).png" alt="Logo ClickPro">
+        <div>
+          <h1>ClickPro AI</h1>
+          <span>Console Local WhatsApp</span>
+        </div>
+      </div>
 
-  const res = await fetch('/api/auth/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password })
-  });
+      <div class="nav" role="tablist">
+        <button class="active" data-section="config">Configurações</button>
+        <button data-section="training">Treinamento</button>
+        <button data-section="conversations">Conversas</button>
+        <button data-section="media">Mídias</button>
+      </div>
 
-  if (res.ok) {
-    location.reload();
-  } else {
-    alert('Erro ao entrar');
-  }
-}
-</script>
+      <div class="sidebar-card">
+        <h3>Status do ambiente</h3>
+        <p>Este painel funciona 100% localmente. As credenciais ficam criptografadas nesta máquina.</p>
+      </div>
 
+      <div class="sidebar-card">
+        <h3>Dicas rápidas</h3>
+        <p>Use o ID do assistente configurado no OpenAI, informe o número oficial do WhatsApp Business e revise o prompt de treinamento.</p>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header>
+        <div class="header-title">
+          <h2>Dashboard completo de atendimento</h2>
+          <p>Configure tudo em um só lugar e acompanhe as conversas em tempo real.</p>
+        </div>
+        <div class="status-pill" id="statusPill">● Ambiente local pronto</div>
+      </header>
+
+      <section class="grid" id="section-config">
+        <div class="card">
+          <h3>Credenciais OpenAI</h3>
+          <p>Insira a chave de API e o Assistant ID utilizados no atendimento. Estes dados ficam criptografados localmente.</p>
+          <div class="form-grid">
+            <div>
+              <label for="openAiKey">OpenAI API Key</label>
+              <input id="openAiKey" type="password" placeholder="sk-...">
+            </div>
+            <div>
+              <label for="assistantId">OpenAI Assistant ID</label>
+              <input id="assistantId" type="text" placeholder="asst_...">
+            </div>
+            <button class="btn" id="saveOpenAi">Salvar credenciais</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>WhatsApp Business (Meta Ads)</h3>
+          <p>Informe o número oficial e o ID do número já configurado no portfólio de anúncios.</p>
+          <div class="form-grid">
+            <div>
+              <label for="whatsappNumber">Número WhatsApp Business</label>
+              <input id="whatsappNumber" type="text" placeholder="5511999999999">
+            </div>
+            <div>
+              <label for="whatsappNumberId">ID do número</label>
+              <input id="whatsappNumberId" type="text" placeholder="123456789">
+            </div>
+            <button class="btn" id="saveWhatsApp">Salvar dados do WhatsApp</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Conexão rápida</h3>
+          <p>Pré-visualize o status local e receba alertas imediatos sobre integrações essenciais.</p>
+          <div class="form-grid">
+            <div class="row">
+              <div class="tag" id="openAiStatusTag"></div>
+              <div class="tag" id="whatsAppStatusTag"></div>
+              <div class="tag" id="localStatusTag"></div>
+            </div>
+            <p class="warning" id="statusWarning">Complete os campos obrigatórios para liberar o envio automático.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid" id="section-training" style="display: none;">
+        <div class="card" style="grid-column: span 2;">
+          <h3>Prompt de treinamento da inteligência</h3>
+          <p>Defina o tom de voz, objetivos e regras que o assistente deve seguir. Use este espaço para treinar o comportamento da IA.</p>
+          <div class="form-grid">
+            <textarea id="trainingPrompt" placeholder="Ex: Você é um especialista em conversão via WhatsApp, sempre cordial e objetivo..."></textarea>
+            <div class="footer-actions">
+              <button class="btn" id="saveTraining">Salvar prompt</button>
+              <button class="btn btn-secondary" id="resetTraining">Limpar</button>
+            </div>
+            <p class="warning">Este prompt é salvo somente neste navegador e pode ser atualizado a qualquer momento.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" id="section-conversations" style="display: none;">
+        <h3>Conversas ativas</h3>
+        <p>Acompanhe o histórico completo. Você pode enviar mensagens manuais e anexar mídia.</p>
+
+        <div class="conversation-area">
+          <div class="conversation-list" id="conversationList"></div>
+          <div class="chat-panel">
+            <div class="chat-messages" id="messages"></div>
+            <div class="composer">
+              <div class="row">
+                <div>
+                  <label for="phone">Telefone (E.164 sem "+")</label>
+                  <input id="phone" type="text" placeholder="5511999999999">
+                </div>
+                <div>
+                  <label for="messageTopic">Etiqueta da conversa</label>
+                  <input id="messageTopic" type="text" placeholder="Ex: Campanha Black Friday">
+                </div>
+              </div>
+              <div>
+                <label for="messageInput">Mensagem</label>
+                <textarea id="messageInput" placeholder="Digite sua mensagem..."></textarea>
+              </div>
+              <div>
+                <label for="mediaInput">Adicionar imagem, vídeo ou áudio</label>
+                <input id="mediaInput" type="file" accept="image/*,video/*,audio/*" multiple>
+                <div class="media-grid" id="mediaPreview"></div>
+              </div>
+              <div class="footer-actions">
+                <button class="btn" id="sendBtn">Enviar agora</button>
+                <button class="btn btn-secondary" id="refreshBtn">Atualizar mensagens</button>
+              </div>
+              <small class="warning">Os anexos ficam registrados localmente para consulta rápida.</small>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid" id="section-media" style="display: none;">
+        <div class="card">
+          <h3>Biblioteca de mídias</h3>
+          <p>Veja tudo o que foi anexado nas conversas locais. Ideal para revisão rápida com o cliente.</p>
+          <div class="media-grid" id="libraryPreview"></div>
+        </div>
+        <div class="card">
+          <h3>Boas práticas</h3>
+          <p>Mantenha vídeos curtos e imagens otimizadas. Arquivos são armazenados apenas localmente neste painel.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const loginScreen = document.getElementById('loginScreen');
+    const loginSubtitle = document.getElementById('loginSubtitle');
+    const loginEmailField = document.getElementById('loginEmailField');
+    const loginEmail = document.getElementById('loginEmail');
+    const loginPassword = document.getElementById('loginPassword');
+    const loginSubmit = document.getElementById('loginSubmit');
+    const loginMessage = document.getElementById('loginMessage');
+    const appContainer = document.getElementById('appContainer');
+
+    const wizardBackdrop = document.getElementById('wizardBackdrop');
+    const wizardStepPill = document.getElementById('wizardStepPill');
+    const wizardOpenAiMessage = document.getElementById('wizardOpenAiMessage');
+    const wizardWhatsAppMessage = document.getElementById('wizardWhatsAppMessage');
+    const wizardWebhookMessage = document.getElementById('wizardWebhookMessage');
+    const wizardStepOpenAi = document.getElementById('wizardStepOpenAi');
+    const wizardStepWhatsApp = document.getElementById('wizardStepWhatsApp');
+    const wizardStepWebhook = document.getElementById('wizardStepWebhook');
+
+    const wizardOpenAiKey = document.getElementById('wizardOpenAiKey');
+    const wizardAssistantId = document.getElementById('wizardAssistantId');
+    const wizardCommandPrompt = document.getElementById('wizardCommandPrompt');
+    const wizardWhatsAppToken = document.getElementById('wizardWhatsAppToken');
+    const wizardPhoneNumberId = document.getElementById('wizardPhoneNumberId');
+    const wizardCloudNumber = document.getElementById('wizardCloudNumber');
+    const wizardVerifyToken = document.getElementById('wizardVerifyToken');
+    const wizardWebhookUrl = document.getElementById('wizardWebhookUrl');
+    const webhookInstructions = document.getElementById('webhookInstructions');
+    const summaryAssistantId = document.getElementById('summaryAssistantId');
+    const summaryPhoneNumberId = document.getElementById('summaryPhoneNumberId');
+    const summaryCloudNumber = document.getElementById('summaryCloudNumber');
+    const summaryWebhookUrl = document.getElementById('summaryWebhookUrl');
+
+    const messagesEl = document.getElementById('messages');
+    const phoneInput = document.getElementById('phone');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const mediaInput = document.getElementById('mediaInput');
+    const mediaPreview = document.getElementById('mediaPreview');
+    const libraryPreview = document.getElementById('libraryPreview');
+    const conversationList = document.getElementById('conversationList');
+
+    const openAiKey = document.getElementById('openAiKey');
+    const assistantId = document.getElementById('assistantId');
+    const whatsappNumber = document.getElementById('whatsappNumber');
+    const whatsappNumberId = document.getElementById('whatsappNumberId');
+    const trainingPrompt = document.getElementById('trainingPrompt');
+
+    const statusPill = document.getElementById('statusPill');
+    const statusWarning = document.getElementById('statusWarning');
+    const openAiStatusTag = document.getElementById('openAiStatusTag');
+    const whatsAppStatusTag = document.getElementById('whatsAppStatusTag');
+    const localStatusTag = document.getElementById('localStatusTag');
+
+    const localMediaKey = 'clickpro_media_library';
+    const localMessageKey = 'clickpro_local_messages';
+
+    let activePhone = '';
+    let localMessages = {};
+    let mediaLibrary = [];
+    let currentPreviewUrls = [];
+    let pollingId = null;
+    let authNeedsSetup = false;
+
+    const sections = {
+      config: document.getElementById('section-config'),
+      training: document.getElementById('section-training'),
+      conversations: document.getElementById('section-conversations'),
+      media: document.getElementById('section-media'),
+    };
+
+    function safeParseLocalStorage(key, fallback) {
+      const value = localStorage.getItem(key);
+      if (!value) {
+        return fallback;
+      }
+      try {
+        return JSON.parse(value);
+      } catch (error) {
+        console.warn(`Falha ao ler ${key} do localStorage.`, error);
+        return fallback;
+      }
+    }
+
+    function setSectionDisplay(section, show) {
+      if (!show) {
+        section.style.display = 'none';
+        return;
+      }
+      section.style.display = section.classList.contains('grid') ? 'grid' : 'block';
+    }
+
+    function startPolling() {
+      if (pollingId) {
+        return;
+      }
+      pollingId = setInterval(fetchMessages, 5000);
+    }
+
+    function stopPolling() {
+      if (!pollingId) {
+        return;
+      }
+      clearInterval(pollingId);
+      pollingId = null;
+    }
+
+    function apiFetch(path, options = {}) {
+      return fetch(path, { credentials: 'include', ...options });
+    }
+
+    function showLoginMessage(text) {
+      loginMessage.textContent = text;
+      loginMessage.style.display = 'block';
+    }
+
+    function showWizardMessage(element, text) {
+      element.textContent = text;
+      element.style.display = 'block';
+    }
+
+    function clearWizardMessages() {
+      wizardOpenAiMessage.style.display = 'none';
+      wizardWhatsAppMessage.style.display = 'none';
+      wizardWebhookMessage.style.display = 'none';
+    }
+
+    function updateWizardSummary(config) {
+      summaryAssistantId.value = config.openai?.assistantId || '';
+      summaryPhoneNumberId.value = config.whatsapp?.phoneNumberId || '';
+      summaryCloudNumber.value = config.whatsapp?.cloudNumber || '';
+      summaryWebhookUrl.value = config.webhook?.publicUrl || '';
+    }
+
+    function updateStatusFromConfig(config) {
+      const isOpenAiReady = Boolean(config?.openai?.apiKeySet && config?.openai?.assistantId && config?.openai?.commandPrompt);
+      const isWhatsAppReady = Boolean(config?.whatsapp?.tokenSet && config?.whatsapp?.phoneNumberId && config?.whatsapp?.cloudNumber);
+      openAiStatusTag.textContent = `${isOpenAiReady ? '●' : '○'} OpenAI ${isOpenAiReady ? 'configurado' : 'pendente'}`;
+      whatsAppStatusTag.textContent = `${isWhatsAppReady ? '●' : '○'} WhatsApp Business ${isWhatsAppReady ? 'ativo' : 'pendente'}`;
+      localStatusTag.textContent = '● Sessão local';
+      if (isOpenAiReady && isWhatsAppReady) {
+        statusPill.textContent = '● Tudo pronto para operar';
+        statusPill.style.background = 'rgba(34, 197, 94, 0.2)';
+        statusPill.style.borderColor = 'rgba(34, 197, 94, 0.5)';
+        statusWarning.textContent = 'Integrações essenciais configuradas.';
+        statusWarning.style.color = 'var(--success)';
+      } else {
+        statusPill.textContent = '● Configure integrações principais';
+        statusPill.style.background = 'rgba(245, 158, 11, 0.2)';
+        statusPill.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+        statusWarning.textContent = 'Complete os campos obrigatórios para liberar o envio automático.';
+        statusWarning.style.color = 'var(--warning)';
+      }
+    }
+
+    async function loadConfigFromServer() {
+      const response = await apiFetch('/api/config');
+      if (!response.ok) {
+        return null;
+      }
+      const payload = await response.json();
+      const config = payload || { openai: {}, whatsapp: {}, webhook: {} };
+      assistantId.value = config.openai?.assistantId || '';
+      trainingPrompt.value = config.openai?.commandPrompt || '';
+      whatsappNumber.value = config.whatsapp?.cloudNumber || '';
+      whatsappNumberId.value = config.whatsapp?.phoneNumberId || '';
+      openAiKey.value = '';
+      openAiKey.placeholder = config.openai?.apiKeySet ? 'Chave salva (oculta)' : 'sk-...';
+      updateStatusFromConfig(config);
+      wizardVerifyToken.value = config.webhook?.verifyToken || '';
+      wizardWebhookUrl.value = config.webhook?.publicUrl || '';
+      updateWebhookInstructions();
+      updateWizardSummary(config);
+      return config;
+    }
+
+    function updateWebhookInstructions() {
+      const url = wizardWebhookUrl.value.trim() || 'https://SUA-URL';
+      const token = wizardVerifyToken.value.trim() || 'XXXXX';
+      webhookInstructions.textContent =
+        `Cole no Meta Developers → WhatsApp → Configuration:\n\n` +
+        `Webhook URL: ${url}/webhook\n` +
+        `Verify Token: ${token}\n` +
+        `Depois clique em ‘Verify and Save’.`;
+    }
+
+    async function loadConfigStatus() {
+      const response = await apiFetch('/api/config/status');
+      if (!response.ok) {
+        return 'NEEDS_SETUP';
+      }
+      const data = await response.json();
+      return data.status;
+    }
+
+    function showWizard() {
+      wizardBackdrop.style.display = 'flex';
+      wizardStepOpenAi.style.display = 'block';
+      wizardStepWhatsApp.style.display = 'none';
+      wizardStepWebhook.style.display = 'none';
+      wizardStepPill.textContent = 'Etapa 1 de 3';
+      clearWizardMessages();
+    }
+
+    function hideWizard() {
+      wizardBackdrop.style.display = 'none';
+      wizardOpenAiKey.value = '';
+      wizardAssistantId.value = '';
+      wizardCommandPrompt.value = '';
+      wizardWhatsAppToken.value = '';
+      wizardPhoneNumberId.value = '';
+      wizardCloudNumber.value = '';
+      wizardVerifyToken.value = '';
+      wizardWebhookUrl.value = '';
+      clearWizardMessages();
+    }
+
+    async function initAfterLogin() {
+      appContainer.style.display = 'grid';
+      loginScreen.style.display = 'none';
+      const status = await loadConfigStatus();
+      await loadConfigFromServer();
+      if (status === 'NEEDS_SETUP') {
+        showWizard();
+      }
+    }
+
+    document.querySelectorAll('.nav button').forEach((button) => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('.nav button').forEach((btn) => btn.classList.remove('active'));
+        button.classList.add('active');
+        Object.values(sections).forEach((section) => setSectionDisplay(section, false));
+        const activeSection = sections[button.dataset.section];
+        setSectionDisplay(activeSection, true);
+        if (button.dataset.section === 'conversations') {
+          startPolling();
+          fetchMessages();
+        } else {
+          stopPolling();
+        }
+      });
+    });
+
+    loginSubmit.addEventListener('click', async () => {
+      loginMessage.style.display = 'none';
+      const password = loginPassword.value.trim();
+      if (!password) {
+        showLoginMessage('Informe sua senha.');
+        return;
+      }
+      const payload = { password, email: loginEmail.value.trim() };
+      const endpoint = authNeedsSetup ? '/api/auth/setup' : '/api/auth/login';
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        showLoginMessage('Não foi possível autenticar. Verifique os dados.');
+        return;
+      }
+      await initAfterLogin();
+    });
+
+    document.getElementById('testOpenAi').addEventListener('click', async () => {
+      clearWizardMessages();
+      const response = await apiFetch('/api/config/test-openai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          apiKey: wizardOpenAiKey.value.trim(),
+          assistantId: wizardAssistantId.value.trim(),
+        }),
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        showWizardMessage(wizardOpenAiMessage, data.error || 'Falha ao testar OpenAI.');
+        return;
+      }
+      showWizardMessage(wizardOpenAiMessage, 'OpenAI validado com sucesso.');
+    });
+
+    document.getElementById('nextWizard').addEventListener('click', () => {
+      if (!wizardOpenAiKey.value.trim() || !wizardAssistantId.value.trim() || !wizardCommandPrompt.value.trim()) {
+        showWizardMessage(wizardOpenAiMessage, 'Preencha todos os campos antes de avançar.');
+        return;
+      }
+      wizardStepOpenAi.style.display = 'none';
+      wizardStepWhatsApp.style.display = 'block';
+      wizardStepPill.textContent = 'Etapa 2 de 3';
+      clearWizardMessages();
+    });
+
+    document.getElementById('testWhatsApp').addEventListener('click', async () => {
+      clearWizardMessages();
+      const response = await apiFetch('/api/config/test-whatsapp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: wizardWhatsAppToken.value.trim(),
+          phoneNumberId: wizardPhoneNumberId.value.trim(),
+        }),
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        showWizardMessage(wizardWhatsAppMessage, data.error || 'Falha ao testar WhatsApp.');
+        return;
+      }
+      showWizardMessage(wizardWhatsAppMessage, 'WhatsApp validado com sucesso.');
+    });
+
+    document.getElementById('finishWizard').addEventListener('click', async () => {
+      if (!wizardWhatsAppToken.value.trim() || !wizardPhoneNumberId.value.trim() || !wizardCloudNumber.value.trim()) {
+        showWizardMessage(wizardWhatsAppMessage, 'Preencha todos os campos antes de concluir.');
+        return;
+      }
+      const response = await apiFetch('/api/config/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          openai: {
+            apiKey: wizardOpenAiKey.value.trim(),
+            assistantId: wizardAssistantId.value.trim(),
+            commandPrompt: wizardCommandPrompt.value.trim(),
+          },
+          whatsapp: {
+            token: wizardWhatsAppToken.value.trim(),
+            phoneNumberId: wizardPhoneNumberId.value.trim(),
+            cloudNumber: wizardCloudNumber.value.trim(),
+          },
+          webhook: {
+            publicUrl: wizardWebhookUrl.value.trim(),
+          },
+        }),
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        showWizardMessage(wizardWhatsAppMessage, data.error || 'Falha ao salvar configuração.');
+        return;
+      }
+      await loadConfigFromServer();
+      wizardStepWhatsApp.style.display = 'none';
+      wizardStepWebhook.style.display = 'block';
+      wizardStepPill.textContent = 'Etapa 3 de 3';
+      clearWizardMessages();
+      updateWebhookInstructions();
+    });
+
+    wizardWebhookUrl.addEventListener('input', updateWebhookInstructions);
+
+    document.getElementById('copyWebhookInstructions').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(webhookInstructions.textContent);
+        showWizardMessage(wizardWebhookMessage, 'Instruções copiadas para a área de transferência.');
+      } catch (error) {
+        showWizardMessage(wizardWebhookMessage, 'Não foi possível copiar. Copie manualmente.');
+      }
+    });
+
+    document.getElementById('copyWebhookInstructionsAgain').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(webhookInstructions.textContent);
+        showWizardMessage(wizardWebhookMessage, 'Instruções copiadas para a área de transferência.');
+      } catch (error) {
+        showWizardMessage(wizardWebhookMessage, 'Não foi possível copiar. Copie manualmente.');
+      }
+    });
+
+    document.getElementById('closeWizard').addEventListener('click', () => {
+      hideWizard();
+    });
+
+    document.getElementById('saveOpenAi').addEventListener('click', async () => {
+      const response = await apiFetch('/api/config/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          openai: {
+            apiKey: openAiKey.value.trim(),
+            assistantId: assistantId.value.trim(),
+            commandPrompt: trainingPrompt.value.trim(),
+          },
+        }),
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        alert(data.error || 'Falha ao salvar OpenAI.');
+        return;
+      }
+      openAiKey.value = '';
+      await loadConfigFromServer();
+      alert('Credenciais OpenAI salvas localmente.');
+    });
+
+    document.getElementById('saveWhatsApp').addEventListener('click', async () => {
+      const response = await apiFetch('/api/config/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          whatsapp: {
+            phoneNumberId: whatsappNumberId.value.trim(),
+            cloudNumber: whatsappNumber.value.trim(),
+          },
+        }),
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        alert(data.error || 'Falha ao salvar WhatsApp.');
+        return;
+      }
+      await loadConfigFromServer();
+      alert('Dados do WhatsApp salvos localmente.');
+    });
+
+    document.getElementById('saveTraining').addEventListener('click', async () => {
+      const response = await apiFetch('/api/config/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          openai: {
+            assistantId: assistantId.value.trim(),
+            commandPrompt: trainingPrompt.value.trim(),
+          },
+        }),
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        alert(data.error || 'Falha ao salvar prompt.');
+        return;
+      }
+      await loadConfigFromServer();
+      alert('Prompt de treinamento salvo localmente.');
+    });
+
+    document.getElementById('resetTraining').addEventListener('click', () => {
+      trainingPrompt.value = '';
+    });
+
+    function renderMessages(msgs) {
+      messagesEl.innerHTML = '';
+      if (!msgs.length) {
+        const empty = document.createElement('div');
+        empty.className = 'message';
+        empty.textContent = 'Nenhuma conversa encontrada para este número.';
+        messagesEl.appendChild(empty);
+        return;
+      }
+      msgs.forEach((m) => {
+        const div = document.createElement('div');
+        div.className = `message ${m.role}`;
+        div.textContent = m.content;
+        if (m.attachments && m.attachments.length) {
+          const grid = document.createElement('div');
+          grid.className = 'media-grid';
+          m.attachments.forEach((file) => {
+            const container = document.createElement('div');
+            container.className = 'media-preview';
+            if (file.url && file.type.startsWith('image/')) {
+              const img = document.createElement('img');
+              img.src = file.url;
+              img.alt = file.name;
+              img.style.width = '100%';
+              img.style.borderRadius = '10px';
+              container.appendChild(img);
+            } else if (file.url && file.type.startsWith('video/')) {
+              const video = document.createElement('video');
+              video.src = file.url;
+              video.controls = true;
+              video.style.width = '100%';
+              video.style.borderRadius = '10px';
+              container.appendChild(video);
+            } else if (file.url && file.type.startsWith('audio/')) {
+              const audio = document.createElement('audio');
+              audio.src = file.url;
+              audio.controls = true;
+              audio.style.width = '100%';
+              container.appendChild(audio);
+            } else {
+              container.textContent = file.name;
+            }
+            grid.appendChild(container);
+          });
+          div.appendChild(grid);
+        }
+        const meta = document.createElement('small');
+        meta.textContent = m.source || 'WhatsApp';
+        div.appendChild(meta);
+        messagesEl.appendChild(div);
+      });
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function buildConversationList(messages) {
+      const phones = Array.from(new Set(messages.map((msg) => msg.phone)));
+      conversationList.innerHTML = '';
+      phones.forEach((phone) => {
+        const item = document.createElement('div');
+        item.className = `conversation-item ${phone === activePhone ? 'active' : ''}`;
+        const title = document.createElement('strong');
+        title.textContent = phone;
+        const preview = messages.find((msg) => msg.phone === phone);
+        const small = document.createElement('small');
+        small.textContent = preview ? preview.content.slice(0, 40) : 'Sem mensagens';
+        item.appendChild(title);
+        item.appendChild(small);
+        item.addEventListener('click', () => {
+          phoneInput.value = phone;
+          activePhone = phone;
+          fetchMessages();
+          document.querySelectorAll('.conversation-item').forEach((el) => el.classList.remove('active'));
+          item.classList.add('active');
+        });
+        conversationList.appendChild(item);
+      });
+    }
+
+    function mergeMessages(remoteMessages, phone) {
+      const local = (localMessages[phone] || []).map((msg) => ({ ...msg, source: 'Local' }));
+      return [...remoteMessages, ...local];
+    }
+
+    function persistLocalMessages() {
+      const sanitized = Object.entries(localMessages).reduce((acc, [phone, messages]) => {
+        acc[phone] = messages.map((msg) => ({
+          ...msg,
+          attachments: msg.attachments
+            ? msg.attachments.map((file) => ({ name: file.name, type: file.type }))
+            : [],
+        }));
+        return acc;
+      }, {});
+      localStorage.setItem(localMessageKey, JSON.stringify(sanitized));
+    }
+
+    function fetchMessages() {
+      const phone = phoneInput.value.trim();
+      if (!phone) {
+        renderMessages([]);
+        return;
+      }
+      activePhone = phone;
+      apiFetch(`/messages?phone=${phone}`)
+        .then((res) => res.json())
+        .then((remoteMessages) => {
+          const merged = mergeMessages(remoteMessages, phone);
+          renderMessages(merged);
+          buildConversationList(merged);
+        })
+        .catch((err) => console.error(err));
+    }
+
+    function updateMediaPreview(files) {
+      mediaPreview.innerHTML = '';
+      files.forEach((file) => {
+        const container = document.createElement('div');
+        container.className = 'media-preview';
+        if (file.url && file.type.startsWith('image/')) {
+          const img = document.createElement('img');
+          img.src = file.url;
+          img.alt = file.name;
+          img.style.width = '100%';
+          img.style.borderRadius = '10px';
+          container.appendChild(img);
+        } else if (file.url && file.type.startsWith('video/')) {
+          const video = document.createElement('video');
+          video.src = file.url;
+          video.controls = true;
+          video.style.width = '100%';
+          video.style.borderRadius = '10px';
+          container.appendChild(video);
+        } else if (file.url && file.type.startsWith('audio/')) {
+          const audio = document.createElement('audio');
+          audio.src = file.url;
+          audio.controls = true;
+          audio.style.width = '100%';
+          container.appendChild(audio);
+        } else {
+          container.textContent = file.name;
+        }
+        mediaPreview.appendChild(container);
+      });
+    }
+
+    function persistMedia(files) {
+      const sanitized = files.map((file) => ({ name: file.name, type: file.type }));
+      mediaLibrary = [...mediaLibrary, ...sanitized];
+      localStorage.setItem(localMediaKey, JSON.stringify(mediaLibrary));
+      renderMediaLibrary();
+    }
+
+    function renderMediaLibrary() {
+      libraryPreview.innerHTML = '';
+      if (!mediaLibrary.length) {
+        libraryPreview.innerHTML = '<p class="warning">Nenhuma mídia anexada ainda.</p>';
+        return;
+      }
+      mediaLibrary.forEach((file) => {
+        const container = document.createElement('div');
+        container.className = 'media-preview';
+        container.textContent = file.name;
+        libraryPreview.appendChild(container);
+      });
+    }
+
+    function revokePreviewUrls() {
+      currentPreviewUrls.forEach((url) => URL.revokeObjectURL(url));
+      currentPreviewUrls = [];
+    }
+
+    function sendMessage() {
+      const phone = phoneInput.value.trim();
+      const message = messageInput.value.trim();
+      const files = Array.from(mediaInput.files);
+      if (!phone || !message) {
+        alert('Informe telefone e mensagem.');
+        return;
+      }
+
+      const storageAttachments = files.map((file) => ({
+        name: file.name,
+        type: file.type,
+      }));
+
+      if (!localMessages[phone]) {
+        localMessages[phone] = [];
+      }
+
+      localMessages[phone].push({
+        role: 'agent',
+        content: message,
+        phone,
+        attachments: storageAttachments,
+        source: 'Local',
+      });
+
+      persistLocalMessages();
+      persistMedia(storageAttachments);
+
+      const formData = new FormData();
+      formData.append('phone', phone);
+      formData.append('message', message);
+      files.forEach((file) => formData.append('attachments', file));
+
+      apiFetch('/send-message', {
+        method: 'POST',
+        body: formData,
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error('Erro ao enviar');
+          messageInput.value = '';
+          mediaInput.value = '';
+          mediaPreview.innerHTML = '';
+          revokePreviewUrls();
+          fetchMessages();
+        })
+        .catch((err) => {
+          alert(err.message);
+        });
+    }
+
+    mediaInput.addEventListener('change', () => {
+      revokePreviewUrls();
+      const files = Array.from(mediaInput.files).map((file) => {
+        const url = URL.createObjectURL(file);
+        currentPreviewUrls.push(url);
+        return {
+          name: file.name,
+          type: file.type,
+          url,
+        };
+      });
+      updateMediaPreview(files);
+    });
+
+    sendBtn.onclick = sendMessage;
+    refreshBtn.onclick = fetchMessages;
+
+    messageInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    localMessages = safeParseLocalStorage(localMessageKey, {});
+    mediaLibrary = safeParseLocalStorage(localMediaKey, []);
+    renderMediaLibrary();
+
+    fetch('/api/auth/status')
+      .then((res) => res.json())
+      .then((data) => {
+        authNeedsSetup = data.needsSetup;
+        loginSubtitle.textContent = authNeedsSetup
+          ? 'Crie a senha do painel para proteger o acesso.'
+          : 'Digite sua senha para continuar.';
+        loginEmailField.style.display = authNeedsSetup ? 'block' : 'none';
+      })
+      .catch(() => {
+        showLoginMessage('Não foi possível verificar o status de acesso.');
+      });
+  </script>
 </body>
 </html>
