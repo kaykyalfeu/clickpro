@@ -138,6 +138,12 @@ export default function LoginPage() {
         <p className="text-center text-slate-500 text-sm mt-6">
           &copy; {new Date().getFullYear()} ClickPro. Todos os direitos reservados.
         </p>
+        <p className="text-center text-slate-400 text-sm mt-2">
+          Ainda não tem conta?{" "}
+          <Link href="/signup" className="text-violet-300 hover:text-violet-200">
+            Criar conta
+          </Link>
+        </p>
       </div>
     </div>
   );

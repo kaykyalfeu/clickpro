@@ -27,10 +27,46 @@ export default function Home() {
             Entrar
           </Link>
           <Link
+            href="/signup"
+            className="px-6 py-3 rounded-xl border border-slate-700 text-white font-semibold hover:bg-slate-800 transition-colors"
+          >
+            Criar conta
+          </Link>
+          <Link
             href="/dashboard"
             className="px-6 py-3 rounded-xl bg-violet-600 text-white font-semibold hover:bg-violet-500 transition-colors shadow-lg shadow-violet-500/30"
           >
             Ir para Dashboard
+          </Link>
+          <Link
+            href="/conversations"
+            className="px-6 py-3 rounded-xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-colors"
+          >
+            Inbox
+          </Link>
+          <Link
+            href="/credentials"
+            className="px-6 py-3 rounded-xl border border-slate-700 text-white font-semibold hover:bg-slate-800 transition-colors"
+          >
+            Credenciais
+          </Link>
+          <Link
+            href="/templates"
+            className="px-6 py-3 rounded-xl border border-slate-700 text-white font-semibold hover:bg-slate-800 transition-colors"
+          >
+            Templates
+          </Link>
+          <Link
+            href="/campaigns"
+            className="px-6 py-3 rounded-xl border border-slate-700 text-white font-semibold hover:bg-slate-800 transition-colors"
+          >
+            Campanhas
+          </Link>
+          <Link
+            href="/contacts"
+            className="px-6 py-3 rounded-xl border border-slate-700 text-white font-semibold hover:bg-slate-800 transition-colors"
+          >
+            Contatos
           </Link>
         </div>
 

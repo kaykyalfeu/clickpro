@@ -55,6 +55,36 @@ export default function DashboardHeader() {
             >
               Home
             </Link>
+            <Link
+              href="/conversations"
+              className="text-sm text-slate-400 hover:text-white transition-colors"
+            >
+              Inbox
+            </Link>
+            <Link
+              href="/credentials"
+              className="text-sm text-slate-400 hover:text-white transition-colors"
+            >
+              Credenciais
+            </Link>
+            <Link
+              href="/templates"
+              className="text-sm text-slate-400 hover:text-white transition-colors"
+            >
+              Templates
+            </Link>
+            <Link
+              href="/campaigns"
+              className="text-sm text-slate-400 hover:text-white transition-colors"
+            >
+              Campanhas
+            </Link>
+            <Link
+              href="/contacts"
+              className="text-sm text-slate-400 hover:text-white transition-colors"
+            >
+              Contatos
+            </Link>
             <button
               onClick={handleSignOut}
               className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-sm hover:bg-slate-700 transition-colors"

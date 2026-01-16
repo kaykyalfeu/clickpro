@@ -10,5 +10,7 @@
   "bin": {
     "clikpro-whatsapp-app": "./index.js"
   },
-  "dependencies": {}
+  "dependencies": {
+    "better-sqlite3": "^9.4.3"
+  }
 }
