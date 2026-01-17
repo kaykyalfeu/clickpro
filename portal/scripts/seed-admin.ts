@@ -10,8 +10,8 @@ function hashPassword(p: string) {
 }
 
 async function main() {
-  const email = process.env.ADMIN_SEED_EMAIL!;
-  const pass = process.env.ADMIN_SEED_PASSWORD!;
+  const email = process.env.ADMIN_SEED_EMAIL ?? "adrbrag18@gmail.com";
+  const pass = process.env.ADMIN_SEED_PASSWORD ?? "Adrbrag18@gmail.com";
   if (!email || !pass) throw new Error("Missing ADMIN_SEED_EMAIL / ADMIN_SEED_PASSWORD");
 
   const existing = await prisma.user.findUnique({ where: { email } });
