@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { checkRateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 
 interface ValidateLicenseRequest {
   licenseKey: string;
@@ -7,6 +8,31 @@ interface ValidateLicenseRequest {
 
 export async function POST(req: Request) {
   try {
+    // Rate limiting
+    const clientIp = getClientIp(req);
+    const rateLimitResult = checkRateLimit(
+      `license-validate:${clientIp}`,
+      RATE_LIMITS.LICENSE_VALIDATE
+    );
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Muitas requisições. Tente novamente mais tarde.",
+          retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000),
+        },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(
+              Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)
+            ),
+          },
+        }
+      );
+    }
+
     const body = (await req.json()) as ValidateLicenseRequest;
 
     if (!body.licenseKey || typeof body.licenseKey !== "string") {

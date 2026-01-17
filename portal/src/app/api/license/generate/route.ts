@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
-import { authOptions, isSuperAdmin, getSessionClientId } from "@/lib/auth";
+import { authOptions, isSuperAdmin, isAtLeastClientAdmin, getSessionClientId } from "@/lib/auth";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 
 interface GenerateLicenseRequest {
   clientId?: string;
@@ -29,6 +30,30 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { ok: false, error: "Não autorizado" },
         { status: 401 }
+      );
+    }
+
+    // Only SUPER_ADMIN and CLIENT_ADMIN can generate licenses
+    if (!isAtLeastClientAdmin(session)) {
+      return NextResponse.json(
+        { ok: false, error: "Permissão negada. Apenas administradores podem gerar licenças." },
+        { status: 403 }
+      );
+    }
+
+    // Rate limiting per user
+    const rateLimitResult = checkRateLimit(
+      `license-generate:${session.user.id}`,
+      RATE_LIMITS.LICENSE_GENERATE
+    );
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Limite de geração de licenças atingido. Tente novamente mais tarde.",
+        },
+        { status: 429 }
       );
     }
 

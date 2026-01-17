@@ -49,6 +49,14 @@ export default function DashboardHeader() {
           )}
 
           <nav className="flex items-center gap-3">
+            {user?.role === "SUPER_ADMIN" && (
+              <Link
+                href="/admin"
+                className="text-sm px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 transition-colors"
+              >
+                Admin
+              </Link>
+            )}
             <Link
               href="/"
               className="text-sm text-slate-400 hover:text-white transition-colors"

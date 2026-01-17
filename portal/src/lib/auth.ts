@@ -126,7 +126,40 @@ export function isClientAdmin(session: Session | null): boolean {
   return session?.user?.role === "CLIENT_ADMIN";
 }
 
+// Helper to check if user is at least CLIENT_ADMIN (CLIENT_ADMIN or SUPER_ADMIN)
+export function isAtLeastClientAdmin(session: Session | null): boolean {
+  const role = session?.user?.role;
+  return role === "SUPER_ADMIN" || role === "CLIENT_ADMIN";
+}
+
 // Helper to get clientId from session (null for SUPER_ADMIN)
 export function getSessionClientId(session: Session | null): string | null {
   return session?.user?.clientId ?? null;
+}
+
+// Helper to check if user can access a specific client's data
+export function canAccessClient(session: Session | null, clientId: string): boolean {
+  if (!session?.user) return false;
+
+  // SUPER_ADMIN can access any client
+  if (session.user.role === "SUPER_ADMIN") return true;
+
+  // Others can only access their own client
+  return session.user.clientId === clientId;
+}
+
+// Helper to get the effective clientId for operations
+// For SUPER_ADMIN: uses provided clientId or returns null
+// For others: always uses their own clientId (ignores provided)
+export function getEffectiveClientId(
+  session: Session | null,
+  requestedClientId?: string | null
+): string | null {
+  if (!session?.user) return null;
+
+  if (session.user.role === "SUPER_ADMIN") {
+    return requestedClientId ?? null;
+  }
+
+  return session.user.clientId;
 }

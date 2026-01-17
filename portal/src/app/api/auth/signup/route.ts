@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { checkRateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 
 function hashPassword(password: string): string {
   const salt = crypto.randomBytes(16).toString("hex");
@@ -12,6 +13,29 @@ function hashPassword(password: string): string {
 
 export async function POST(request: Request) {
   try {
+    // Rate limiting
+    const clientIp = getClientIp(request);
+    const rateLimitResult = checkRateLimit(
+      `signup:${clientIp}`,
+      RATE_LIMITS.SIGNUP
+    );
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          error: "Muitas tentativas de cadastro. Tente novamente mais tarde.",
+        },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(
+              Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)
+            ),
+          },
+        }
+      );
+    }
+
     const body = await request.json();
     const { firstName, lastName, email, password } = body;
 
