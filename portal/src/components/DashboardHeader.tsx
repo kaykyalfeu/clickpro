@@ -2,6 +2,7 @@
 
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
+import LicenseStatus from "./LicenseStatus";
 
 export default function DashboardHeader() {
   const { data: session } = useSession();
@@ -45,6 +46,7 @@ export default function DashboardHeader() {
               <div className="w-9 h-9 rounded-full bg-violet-600/30 flex items-center justify-center text-violet-300 text-sm font-medium border border-violet-500/30">
                 {(user.name || user.email || "U").charAt(0).toUpperCase()}
               </div>
+              <LicenseStatus />
             </div>
           )}
 
