@@ -15,9 +15,14 @@ const clientAdminPaths: string[] = [];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  let token = null;
+  try {
+    token = await getToken({ req: request });
+  } catch {
+    token = null;
+  }
 
   // Protected routes
-  const protectedPaths = ["/dashboard", "/admin"];
   const isProtected = protectedPaths.some((path) => pathname.startsWith(path));
   const isAdminOnly = adminOnlyPaths.some((path) => pathname.startsWith(path));
   const isClientAdminOnly = clientAdminPaths.some((path) => pathname.startsWith(path));
