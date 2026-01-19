@@ -14,14 +14,14 @@ async function main() {
   const pass = process.env.ADMIN_SEED_PASSWORD ?? "Adrbrag18@gmail.com";
   if (!email || !pass) throw new Error("Missing ADMIN_SEED_EMAIL / ADMIN_SEED_PASSWORD");
 
-  const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) {
-    console.log("Admin already exists:", email);
-    return;
-  }
-
-  await prisma.user.create({
-    data: {
+  await prisma.user.upsert({
+    where: { email },
+    update: {
+      role: Role.SUPER_ADMIN,
+      passwordHash: hashPassword(pass),
+      name: "Andre (SUPER_ADMIN)"
+    },
+    create: {
       email,
       role: Role.SUPER_ADMIN,
       passwordHash: hashPassword(pass),
@@ -29,7 +29,7 @@ async function main() {
     }
   });
 
-  console.log("Admin created:", email);
+  console.log("Admin created/updated:", email);
 }
 
 main()

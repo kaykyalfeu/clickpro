@@ -14,6 +14,7 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [superAdminLoading, setSuperAdminLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -38,6 +39,36 @@ function LoginForm() {
     } catch {
       setError("Erro ao fazer login. Tente novamente.");
       setLoading(false);
+    }
+  }
+
+  async function handleSuperAdminLogin() {
+    if (!email || !password) {
+      setError("Informe email e senha para acessar como super admin.");
+      return;
+    }
+    setError("");
+    setSuperAdminLoading(true);
+
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+        callbackUrl: "/admin",
+      });
+
+      if (result?.error) {
+        setError("Email ou senha incorretos");
+        setSuperAdminLoading(false);
+        return;
+      }
+
+      router.push("/admin");
+      router.refresh();
+    } catch {
+      setError("Erro ao fazer login. Tente novamente.");
+      setSuperAdminLoading(false);
     }
   }
 
@@ -92,6 +123,15 @@ function LoginForm() {
           className="w-full py-3 rounded-xl bg-violet-600 text-white font-semibold hover:bg-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-violet-500/30"
         >
           {loading ? "Entrando..." : "Entrar"}
+        </button>
+
+        <button
+          type="button"
+          onClick={handleSuperAdminLogin}
+          disabled={superAdminLoading}
+          className="w-full py-2 text-xs text-slate-400 hover:text-slate-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {superAdminLoading ? "Entrando como super admin..." : "Acesso super admin"}
         </button>
       </form>
     </div>
