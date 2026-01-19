@@ -15,7 +15,12 @@ const clientAdminPaths: string[] = [];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const token = await getToken({ req: request });
+  let token = null;
+  try {
+    token = await getToken({ req: request });
+  } catch {
+    token = null;
+  }
 
   // Protected routes
   const isProtected = protectedPaths.some((path) => pathname.startsWith(path));
