@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { signIn } from "next-auth/react";
+import { getSession, signIn, signOut } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
@@ -60,6 +60,14 @@ function LoginForm() {
 
       if (result?.error) {
         setError("Email ou senha incorretos");
+        setSuperAdminLoading(false);
+        return;
+      }
+
+      const session = await getSession();
+      if (session?.user?.role !== "SUPER_ADMIN") {
+        setError("Sua conta não possui permissão de super admin.");
+        await signOut({ redirect: false });
         setSuperAdminLoading(false);
         return;
       }

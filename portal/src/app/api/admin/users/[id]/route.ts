@@ -136,6 +136,18 @@ export async function PATCH(req: Request, { params }: RouteParams) {
       }
     }
 
+    if (
+      updateData.role &&
+      updateData.role !== "SUPER_ADMIN" &&
+      existing.memberships.length === 0 &&
+      !addToClient
+    ) {
+      return NextResponse.json(
+        { error: "Usuários CLIENT_ADMIN e CLIENT_USER precisam de um cliente" },
+        { status: 400 }
+      );
+    }
+
     // Handle password reset
     if (resetPassword) {
       generatedPassword = generateRandomPassword();
@@ -144,21 +156,25 @@ export async function PATCH(req: Request, { params }: RouteParams) {
       updateData.passwordHash = hashPassword(newPassword);
     }
 
-    // Update user
-    const updatedUser = await prisma.user.update({
-      where: { id },
-      data: updateData,
-    });
+    const targetClient = addToClient
+      ? await prisma.client.findUnique({ where: { id: addToClient } })
+      : null;
 
-    // Handle client membership changes
-    if (addToClient) {
-      const client = await prisma.client.findUnique({
-        where: { id: addToClient },
+    if (addToClient && !targetClient) {
+      return NextResponse.json(
+        { error: "Cliente não encontrado" },
+        { status: 404 }
+      );
+    }
+
+    const updatedUser = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.update({
+        where: { id },
+        data: updateData,
       });
 
-      if (client) {
-        // Check if membership already exists
-        const existingMembership = await prisma.clientMember.findUnique({
+      if (addToClient && targetClient) {
+        const existingMembership = await tx.clientMember.findUnique({
           where: {
             userId_clientId: {
               userId: id,
@@ -168,25 +184,27 @@ export async function PATCH(req: Request, { params }: RouteParams) {
         });
 
         if (!existingMembership) {
-          await prisma.clientMember.create({
+          await tx.clientMember.create({
             data: {
               userId: id,
               clientId: addToClient,
-              role: updatedUser.role === "SUPER_ADMIN" ? "CLIENT_ADMIN" : updatedUser.role,
+              role: user.role === "SUPER_ADMIN" ? "CLIENT_ADMIN" : user.role,
             },
           });
         }
       }
-    }
 
-    if (removeFromClient) {
-      await prisma.clientMember.deleteMany({
-        where: {
-          userId: id,
-          clientId: removeFromClient,
-        },
-      });
-    }
+      if (removeFromClient) {
+        await tx.clientMember.deleteMany({
+          where: {
+            userId: id,
+            clientId: removeFromClient,
+          },
+        });
+      }
+
+      return user;
+    });
 
     const response: {
       ok: boolean;

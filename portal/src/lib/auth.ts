@@ -69,7 +69,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         // SUPER_ADMIN has no client, CLIENT_ADMIN/CLIENT_USER have a client
-        const membership = user.memberships?.[0];
+        const membership = user.role === "SUPER_ADMIN" ? null : user.memberships?.[0];
 
         return {
           id: user.id,
