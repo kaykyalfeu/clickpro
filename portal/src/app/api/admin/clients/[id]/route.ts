@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import { authOptions, isSuperAdmin } from "@/lib/auth";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -16,6 +17,18 @@ export async function GET(req: Request, { params }: RouteParams) {
       return NextResponse.json(
         { error: "Acesso negado" },
         { status: 403 }
+      );
+    }
+
+    // Rate limit by user ID
+    const rateLimitResult = checkRateLimit(
+      `admin_client_read:${session.user.id}`,
+      RATE_LIMITS.ADMIN_READ
+    );
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: "Muitas requisições. Tente novamente em alguns segundos." },
+        { status: 429 }
       );
     }
 
@@ -99,6 +112,18 @@ export async function PATCH(req: Request, { params }: RouteParams) {
       );
     }
 
+    // Rate limit by user ID
+    const rateLimitResult = checkRateLimit(
+      `admin_client_write:${session.user.id}`,
+      RATE_LIMITS.ADMIN_WRITE
+    );
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: "Muitas requisições. Tente novamente em alguns segundos." },
+        { status: 429 }
+      );
+    }
+
     const { id } = await params;
     const body = await req.json();
     const { name, slug } = body;
@@ -178,6 +203,18 @@ export async function DELETE(req: Request, { params }: RouteParams) {
       return NextResponse.json(
         { error: "Acesso negado" },
         { status: 403 }
+      );
+    }
+
+    // Rate limit by user ID
+    const rateLimitResult = checkRateLimit(
+      `admin_client_write:${session.user.id}`,
+      RATE_LIMITS.ADMIN_WRITE
+    );
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: "Muitas requisições. Tente novamente em alguns segundos." },
+        { status: 429 }
       );
     }
 

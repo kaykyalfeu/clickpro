@@ -16,9 +16,16 @@ function hashPassword(p) {
 }
 
 async function main() {
-  const email = process.env.ADMIN_SEED_EMAIL ?? "adrbrag18@gmail.com";
-  const pass = process.env.ADMIN_SEED_PASSWORD ?? "Adrbrag18@gmail.com";
-  if (!email || !pass) throw new Error("Missing ADMIN_SEED_EMAIL / ADMIN_SEED_PASSWORD");
+  const email = process.env.ADMIN_SEED_EMAIL;
+  const pass = process.env.ADMIN_SEED_PASSWORD;
+  if (!email || !pass) {
+    throw new Error(
+      "Missing ADMIN_SEED_EMAIL and/or ADMIN_SEED_PASSWORD environment variables.\n" +
+      "Please set these before running the seed script:\n" +
+      "  export ADMIN_SEED_EMAIL=your-admin@email.com\n" +
+      "  export ADMIN_SEED_PASSWORD=YourSecurePassword123"
+    );
+  }
 
   await prisma.user.upsert({
     where: { email },

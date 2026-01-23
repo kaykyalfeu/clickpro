@@ -119,4 +119,10 @@ export const RATE_LIMITS = {
 
   // API general: 60 requests per minute per IP
   API_GENERAL: { limit: 60, windowSec: 60 },
+
+  // Admin API: 30 write operations per minute per user (for create/update/delete)
+  ADMIN_WRITE: { limit: 30, windowSec: 60 },
+
+  // Admin API: 120 read operations per minute per user (for list/get)
+  ADMIN_READ: { limit: 120, windowSec: 60 },
 } as const;

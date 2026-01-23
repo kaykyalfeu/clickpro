@@ -65,7 +65,15 @@ function LoginForm() {
         return;
       }
 
-      const session = await getSession();
+      // Wait for session to be updated and retry getSession a few times
+      // This fixes the race condition where JWT may not be ready immediately
+      let session = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        await new Promise((resolve) => setTimeout(resolve, 300 * (attempt + 1)));
+        session = await getSession();
+        if (session?.user?.role) break;
+      }
+
       if (session?.user?.role !== "SUPER_ADMIN") {
         setError("Sua conta não possui permissão de super admin.");
         await signOut({ redirect: false });
