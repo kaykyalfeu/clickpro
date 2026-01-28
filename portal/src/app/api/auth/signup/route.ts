@@ -67,26 +67,60 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create the user
+    // Create the user, client, and membership in a transaction
     const name = [firstName, lastName].filter(Boolean).join(" ") || null;
     const passwordHash = hashPassword(password);
 
-    const user = await prisma.user.create({
-      data: {
-        email,
-        name,
-        passwordHash,
-        role: "CLIENT_USER",
-      },
+    // Generate a client name and slug from user info
+    const clientName = name || email.split("@")[0];
+    const baseSlug = clientName
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+
+    // Add timestamp to ensure unique slug
+    const clientSlug = `${baseSlug}-${Date.now().toString(36)}`;
+
+    const result = await prisma.$transaction(async (tx) => {
+      // Create the client (company)
+      const client = await tx.client.create({
+        data: {
+          name: clientName,
+          slug: clientSlug,
+        },
+      });
+
+      // Create the user
+      const user = await tx.user.create({
+        data: {
+          email,
+          name,
+          passwordHash,
+          role: "CLIENT_ADMIN",
+        },
+      });
+
+      // Create the membership linking user to client
+      await tx.clientMember.create({
+        data: {
+          userId: user.id,
+          clientId: client.id,
+          role: "CLIENT_ADMIN",
+        },
+      });
+
+      return { user, client };
     });
 
     return NextResponse.json(
       {
         message: "Conta criada com sucesso",
         user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
+          id: result.user.id,
+          email: result.user.email,
+          name: result.user.name,
         }
       },
       { status: 201 }
