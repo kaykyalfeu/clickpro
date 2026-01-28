@@ -35,20 +35,23 @@ export async function POST(req: Request) {
       );
     }
 
+    // Check if we should force update (reset password)
+    const forceUpdate = body.forceUpdate === true;
+
     // Check if super admin already exists
     const existingAdmin = await prisma.user.findFirst({
       where: { role: "SUPER_ADMIN" },
     });
 
-    if (existingAdmin) {
+    if (existingAdmin && !forceUpdate) {
       return NextResponse.json({
         ok: true,
-        message: "Super admin already exists",
+        message: "Super admin already exists. Use forceUpdate: true to reset password.",
         email: existingAdmin.email,
       });
     }
 
-    // Create super admin
+    // Create or update super admin
     const user = await prisma.user.upsert({
       where: { email },
       update: {
@@ -66,7 +69,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       ok: true,
-      message: "Super admin created successfully",
+      message: existingAdmin ? "Super admin password updated successfully" : "Super admin created successfully",
       email: user.email,
     });
   } catch (error) {
