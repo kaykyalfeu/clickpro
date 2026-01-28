@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 
 interface GeneratedLicense {
   licenseKey: string;
@@ -8,7 +9,16 @@ interface GeneratedLicense {
   issuedAt: string;
 }
 
+interface Client {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 export default function LicenseGenerator() {
+  const { data: session } = useSession();
+  const isSuperAdmin = session?.user?.role === "SUPER_ADMIN";
+
   const [customerName, setCustomerName] = useState("");
   const [email, setEmail] = useState("");
   const [expiresInDays, setExpiresInDays] = useState(365);
@@ -16,6 +26,29 @@ export default function LicenseGenerator() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<GeneratedLicense | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Client selector state for SUPER_ADMIN
+  const [clients, setClients] = useState<Client[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState("");
+  const [loadingClients, setLoadingClients] = useState(false);
+
+  // Fetch clients when SUPER_ADMIN
+  useEffect(() => {
+    if (isSuperAdmin) {
+      setLoadingClients(true);
+      fetch("/api/admin/clients")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.ok) {
+            setClients(data.clients);
+          }
+        })
+        .catch(() => {
+          // Silent fail
+        })
+        .finally(() => setLoadingClients(false));
+    }
+  }, [isSuperAdmin]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,6 +61,7 @@ export default function LicenseGenerator() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          clientId: isSuperAdmin ? selectedClientId : undefined,
           customerName: customerName || undefined,
           email: email || undefined,
           expiresInDays,
@@ -64,6 +98,31 @@ export default function LicenseGenerator() {
       <h3 className="text-lg font-semibold text-white mb-4">Gerar Nova Licença</h3>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Client selector for SUPER_ADMIN */}
+        {isSuperAdmin && (
+          <div>
+            <label className="block text-sm text-slate-400 mb-1">
+              Cliente *
+            </label>
+            <select
+              value={selectedClientId}
+              onChange={(e) => setSelectedClientId(e.target.value)}
+              required
+              disabled={loadingClients}
+              className="w-full px-4 py-2 rounded-lg bg-slate-900 border border-slate-600 text-white focus:outline-none focus:border-violet-500 disabled:opacity-50"
+            >
+              <option value="">
+                {loadingClients ? "Carregando..." : "Selecione um cliente"}
+              </option>
+              {clients.map((client) => (
+                <option key={client.id} value={client.id}>
+                  {client.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm text-slate-400 mb-1">
@@ -123,7 +182,7 @@ export default function LicenseGenerator() {
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || (isSuperAdmin && !selectedClientId)}
           className="px-6 py-2 rounded-lg bg-violet-600 text-white font-medium hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? "Gerando..." : "Gerar Licença"}
