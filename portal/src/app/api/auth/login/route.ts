@@ -160,6 +160,25 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Login validation error:", error);
+
+    // Check for Prisma database connection errors
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      (error.code === "P1000" || error.code === "P1001" || error.code === "P1002" || error.code === "P1003")
+    ) {
+      console.error("Database connection error during login. Check DATABASE_URL configuration.");
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Erro de conexão com o banco de dados. Entre em contato com o suporte.",
+          code: "DATABASE_CONNECTION_ERROR",
+        },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json(
       {
         ok: false,
