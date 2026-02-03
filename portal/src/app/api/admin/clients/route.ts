@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import { authOptions, isSuperAdmin } from "@/lib/auth";
@@ -52,6 +53,7 @@ export async function GET() {
       clients: clients.map((client) => ({
         id: client.id,
         name: client.name,
+        clientId: client.clientId,
         slug: client.slug,
         createdAt: client.createdAt.toISOString(),
         memberCount: client._count.members,
@@ -127,6 +129,7 @@ export async function POST(req: Request) {
       data: {
         name: name.trim(),
         slug: clientSlug,
+        clientId: randomUUID(),
       },
     });
 
@@ -134,6 +137,7 @@ export async function POST(req: Request) {
       ok: true,
       client: {
         id: client.id,
+        clientId: client.clientId,
         name: client.name,
         slug: client.slug,
         createdAt: client.createdAt.toISOString(),

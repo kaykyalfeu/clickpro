@@ -126,6 +126,25 @@ export function signLicense(payload: LicensePayload, secret: string) {
   return `${data}.${s}`;
 }
 
+export type ActivationPayload = {
+  licenseId: string;
+  clientId: string;
+  role: string;
+  issuedAt: string;
+  expiresAt: string;
+  jti: string;
+};
+
+export function signActivationToken(payload: ActivationPayload, secret: string) {
+  const header = { alg: "HS256", typ: "JWT" };
+  const h = base64url(JSON.stringify(header));
+  const p = base64url(JSON.stringify(payload));
+  const data = `${h}.${p}`;
+  const sig = crypto.createHmac("sha256", secret).update(data).digest("base64");
+  const s = sig.replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+  return `${data}.${s}`;
+}
+
 export type VerifyLicenseResult =
   | { ok: false; reason: "INVALID_FORMAT" | "BAD_SIGNATURE" | "BAD_EXPIRES" | "EXPIRED" }
   | { ok: true; payload: LicensePayload };

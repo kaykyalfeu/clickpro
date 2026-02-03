@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 
 interface Client {
   id: string;
+  clientId?: string;
   name: string;
   slug: string;
   createdAt: string;
@@ -29,6 +30,7 @@ export default function AdminClientsPage() {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
+  const [createdClientId, setCreatedClientId] = useState<string | null>(null);
 
   async function fetchClients() {
     try {
@@ -70,12 +72,14 @@ export default function AdminClientsPage() {
 
       if (data.ok) {
         setFormSuccess(`Cliente "${data.client.name}" criado com sucesso!`);
+        setCreatedClientId(data.client.clientId ?? null);
         setFormName("");
         setFormSlug("");
         fetchClients();
         setTimeout(() => {
           setShowForm(false);
           setFormSuccess(null);
+          setCreatedClientId(null);
         }, 2000);
       } else {
         setFormError(data.error || "Erro ao criar cliente");
@@ -168,6 +172,17 @@ export default function AdminClientsPage() {
             {formSuccess && (
               <div className="p-3 rounded-lg bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 text-sm">
                 {formSuccess}
+              </div>
+            )}
+
+            {createdClientId && (
+              <div className="space-y-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-200">
+                <p>Client ID gerado automaticamente:</p>
+                <input
+                  value={createdClientId}
+                  readOnly
+                  className="w-full rounded-lg border border-emerald-500/40 bg-slate-900 px-3 py-2 text-sm text-emerald-100"
+                />
               </div>
             )}
 

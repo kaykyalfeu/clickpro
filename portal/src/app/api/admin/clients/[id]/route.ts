@@ -67,6 +67,7 @@ export async function GET(req: Request, { params }: RouteParams) {
       ok: true,
       client: {
         id: client.id,
+        clientId: client.clientId,
         name: client.name,
         slug: client.slug,
         createdAt: client.createdAt.toISOString(),

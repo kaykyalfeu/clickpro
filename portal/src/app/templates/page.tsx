@@ -14,12 +14,16 @@ interface TemplateItem {
   created_at: string;
 }
 
-const defaultBaseUrl = process.env.NEXT_PUBLIC_CLICKPRO_API_URL || "http://localhost:3001";
+const defaultBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://clickpro.grupogarciaseguradoras.com.br";
 
 export default function TemplatesPage() {
   const [baseUrl, setBaseUrl] = useState(defaultBaseUrl);
   const [token, setToken] = useState("");
   const [clientId, setClientId] = useState("");
+  const [licenseKey, setLicenseKey] = useState("");
+  const [activationLoading, setActivationLoading] = useState(false);
+  const [activationError, setActivationError] = useState<string | null>(null);
+  const [activationSuccess, setActivationSuccess] = useState<string | null>(null);
   const [templates, setTemplates] = useState<TemplateItem[]>([]);
   const [name, setName] = useState("");
   const [language, setLanguage] = useState("pt_BR");
@@ -34,21 +38,69 @@ export default function TemplatesPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    const storedJwt = localStorage.getItem("CLICKPRO_JWT");
     const stored = localStorage.getItem("clickpro-config");
     if (stored) {
-      const config = JSON.parse(stored) as { baseUrl?: string; token?: string; clientId?: string };
+      const config = JSON.parse(stored) as {
+        baseUrl?: string;
+        token?: string;
+        clientId?: string;
+        licenseKey?: string;
+      };
       if (config.baseUrl) setBaseUrl(config.baseUrl);
-      if (config.token) setToken(config.token);
       if (config.clientId) setClientId(config.clientId);
+      if (config.licenseKey) setLicenseKey(config.licenseKey);
+      if (!storedJwt && config.token) setToken(config.token);
     }
+    if (storedJwt) setToken(storedJwt);
   }, []);
 
   function saveConfig() {
-    localStorage.setItem(
-      "clickpro-config",
-      JSON.stringify({ baseUrl, token, clientId }),
-    );
+    localStorage.setItem("clickpro-config", JSON.stringify({
+      baseUrl,
+      token,
+      clientId,
+      licenseKey,
+    }));
+    if (token) localStorage.setItem("CLICKPRO_JWT", token);
     setFeedback("Configurações salvas localmente.");
+  }
+
+  async function activateLicense() {
+    if (!licenseKey.trim()) {
+      setActivationError("Informe a chave de licença.");
+      return;
+    }
+    setActivationLoading(true);
+    setActivationError(null);
+    setActivationSuccess(null);
+    try {
+      const response = await fetch("/api/license/activate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ licenseKey: licenseKey.trim() }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok) {
+        setActivationError(data.error || data.reason || "Falha ao ativar licença.");
+        return;
+      }
+      const resolvedClientId = data.clientId ?? clientId;
+      setToken(data.token);
+      if (resolvedClientId) setClientId(resolvedClientId);
+      localStorage.setItem("CLICKPRO_JWT", data.token);
+      localStorage.setItem("clickpro-config", JSON.stringify({
+        baseUrl,
+        token: data.token,
+        clientId: resolvedClientId,
+        licenseKey: licenseKey.trim(),
+      }));
+      setActivationSuccess("Licença ativada. JWT gerado automaticamente.");
+    } catch (err) {
+      setActivationError(err instanceof Error ? err.message : "Erro ao ativar licença.");
+    } finally {
+      setActivationLoading(false);
+    }
   }
 
   async function fetchTemplates() {
@@ -157,6 +209,12 @@ export default function TemplatesPage() {
           <ApiConfigCard
             baseUrl={baseUrl}
             setBaseUrl={setBaseUrl}
+            licenseKey={licenseKey}
+            setLicenseKey={setLicenseKey}
+            onActivate={activateLicense}
+            activationLoading={activationLoading}
+            activationError={activationError}
+            activationSuccess={activationSuccess}
             token={token}
             setToken={setToken}
             clientId={clientId}

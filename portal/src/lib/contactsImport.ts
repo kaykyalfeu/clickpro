@@ -18,7 +18,7 @@ export function getContactsImportError({
     return "Informe o Client ID antes de importar.";
   }
   if (!token.trim()) {
-    return "Informe o JWT Token antes de importar.";
+    return "Ative sua licença para gerar o JWT antes de importar.";
   }
   if (!csvText.trim()) {
     return "Adicione um CSV antes de importar.";

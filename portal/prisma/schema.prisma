@@ -32,6 +32,7 @@ model User {
 
 model Client {
   id        String   @id @default(cuid())
+  clientId  String   @unique
   name      String
   slug      String   @unique
   createdAt DateTime @default(now())

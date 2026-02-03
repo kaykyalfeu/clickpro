@@ -92,6 +92,7 @@ export async function POST(request: Request) {
         data: {
           name: clientName,
           slug: clientSlug,
+          clientId: crypto.randomUUID(),
         },
       });
 
