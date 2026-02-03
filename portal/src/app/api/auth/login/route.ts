@@ -113,10 +113,22 @@ export async function POST(request: Request) {
     // Find user
     const user = await prisma.user.findUnique({
       where: { email: normalizedEmail },
-      include: {
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        passwordHash: true,
+        role: true,
         memberships: {
-          include: { client: true },
           take: 1,
+          select: {
+            clientId: true,
+            client: {
+              select: {
+                name: true,
+              },
+            },
+          },
         },
       },
     });
