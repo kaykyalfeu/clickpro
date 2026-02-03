@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import ApiConfigCard from "@/components/ApiConfigCard";
 import DashboardHeader from "@/components/DashboardHeader";
+import * as ExcelJS from "exceljs";
 
 interface PreviewRow {
   name?: string;
@@ -17,6 +18,8 @@ export default function ContactsPage() {
   const [token, setToken] = useState("");
   const [clientId, setClientId] = useState("");
   const [csvText, setCsvText] = useState("");
+  const [excelData, setExcelData] = useState<string | null>(null); // base64 encoded Excel
+  const [fileType, setFileType] = useState<"csv" | "excel">("csv");
   const [previewRows, setPreviewRows] = useState<PreviewRow[]>([]);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -57,23 +60,80 @@ export default function ContactsPage() {
     });
   }
 
+  async function parseExcelPreview(buffer: ArrayBuffer): Promise<PreviewRow[]> {
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(buffer);
+    
+    const worksheet = workbook.worksheets[0];
+    if (!worksheet || worksheet.rowCount === 0) return [];
+    
+    const headerRow = worksheet.getRow(1);
+    const headers: string[] = [];
+    headerRow.eachCell((cell, colNumber) => {
+      headers[colNumber - 1] = String(cell.value || '').trim().toLowerCase();
+    });
+    
+    const rows: PreviewRow[] = [];
+    const maxRows = Math.min(6, worksheet.rowCount);
+    
+    for (let rowNumber = 2; rowNumber <= maxRows; rowNumber++) {
+      const dataRow = worksheet.getRow(rowNumber);
+      const row: PreviewRow = {};
+      dataRow.eachCell((cell, colNumber) => {
+        const header = headers[colNumber - 1];
+        const value = String(cell.value || '').trim();
+        
+        if (header.includes("name") || header.includes("nome")) row.name = value;
+        if (header.includes("phone") || header.includes("telefone") || header.includes("numero")) {
+          row.phone = value;
+        }
+        if (header.includes("email")) row.email = value;
+      });
+      
+      if (Object.values(row).some(val => val)) {
+        rows.push(row);
+      }
+    }
+    
+    return rows;
+  }
+
   async function handleFile(file: File) {
-    const text = await file.text();
-    setCsvText(text);
-    setPreviewRows(parseCsvPreview(text));
+    const fileName = file.name.toLowerCase();
+    
+    if (fileName.endsWith('.csv')) {
+      const text = await file.text();
+      setCsvText(text);
+      setExcelData(null);
+      setFileType("csv");
+      setPreviewRows(parseCsvPreview(text));
+    } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+      const buffer = await file.arrayBuffer();
+      const base64 = Buffer.from(buffer).toString('base64');
+      setExcelData(base64);
+      setCsvText("");
+      setFileType("excel");
+      setPreviewRows(await parseExcelPreview(buffer));
+    } else {
+      setError('Formato de arquivo não suportado. Use .csv, .xlsx ou .xls');
+    }
   }
 
   async function uploadContacts() {
     setFeedback(null);
     setError(null);
     try {
+      const body = fileType === "csv" 
+        ? JSON.stringify({ csv: csvText })
+        : JSON.stringify({ excel: excelData });
+        
       const response = await fetch(`${baseUrl}/api/clients/${clientId}/contacts/upload`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ csv: csvText }),
+        body,
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Falha ao importar contatos.");
@@ -111,8 +171,8 @@ export default function ContactsPage() {
         {/* Instruções de importação */}
         <section className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 mb-6">
           <h2 className="text-lg font-semibold mb-2" title="Área para importar contatos para suas campanhas">Importar contatos</h2>
-          <p className="text-sm text-slate-400 mb-4" title="Instruções para preparar seu arquivo CSV">
-            Envie sua lista de contatos em formato CSV. Use colunas com cabeçalhos:
+          <p className="text-sm text-slate-400 mb-4" title="Instruções para preparar seu arquivo CSV ou Excel">
+            Envie sua lista de contatos em formato CSV ou Excel (.xlsx, .xls). Use colunas com cabeçalhos:
           </p>
           <div className="flex flex-wrap gap-2 mb-4">
             <code className="rounded bg-slate-800 px-2 py-1 text-xs text-emerald-400" title="Nome do contato (opcional)">name</code>
@@ -120,7 +180,7 @@ export default function ContactsPage() {
             <code className="rounded bg-slate-800 px-2 py-1 text-xs text-emerald-400" title="Email válido do contato (opcional)">email</code>
           </div>
           <div className="rounded-xl border border-slate-800 bg-slate-950 p-4">
-            <p className="text-xs text-slate-500 mb-2" title="Exemplo de como montar seu arquivo CSV">Exemplo de arquivo CSV:</p>
+            <p className="text-xs text-slate-500 mb-2" title="Exemplo de como montar seu arquivo">Exemplo de arquivo CSV ou Excel:</p>
             <pre className="text-xs text-slate-400 font-mono" title="Copie este formato para criar seu arquivo">
 {`name,phone,email
 João Silva,5511999999999,joao@email.com
@@ -137,28 +197,33 @@ Pedro Santos,5521777777777,pedro@email.com`}
           <h2 className="text-lg font-semibold" title="Faça upload ou cole seus contatos aqui">Importação</h2>
           <div className="mt-4 space-y-4">
             <div>
-              <label className="text-xs text-slate-400" title="Selecione um arquivo CSV do seu computador">Arquivo CSV</label>
+              <label className="text-xs text-slate-400" title="Selecione um arquivo CSV ou Excel do seu computador">Arquivo (CSV ou Excel)</label>
               <input
                 type="file"
-                accept=".csv"
+                accept=".csv,.xlsx,.xls"
                 onChange={(event) => {
                   const file = event.target.files?.[0];
                   if (file) handleFile(file);
                 }}
                 className="mt-2 text-sm text-slate-300"
-                title="Clique para selecionar um arquivo .csv"
+                title="Clique para selecionar um arquivo .csv, .xlsx ou .xls"
               />
             </div>
             <div>
-              <label className="text-xs text-slate-400" title="Ou cole o conteúdo diretamente aqui">Conteúdo CSV</label>
+              <label className="text-xs text-slate-400" title="Ou cole o conteúdo diretamente aqui">Conteúdo CSV (opcional)</label>
               <textarea
                 value={csvText}
-                onChange={(event) => setCsvText(event.target.value)}
+                onChange={(event) => {
+                  setCsvText(event.target.value);
+                  setExcelData(null);
+                  setFileType("csv");
+                  setPreviewRows(parseCsvPreview(event.target.value));
+                }}
                 className="mt-2 h-40 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
                 placeholder="Cole o conteúdo CSV aqui"
                 title="Cole o conteúdo do seu arquivo CSV ou edite diretamente"
               />
-              <p className="mt-1 text-xs text-slate-500" title="Dica de uso">Você pode editar o conteúdo diretamente antes de importar</p>
+              <p className="mt-1 text-xs text-slate-500" title="Dica de uso">Você pode editar o conteúdo CSV diretamente antes de importar (não funciona com Excel)</p>
             </div>
             <button
               type="button"
@@ -176,7 +241,7 @@ Pedro Santos,5521777777777,pedro@email.com`}
           <p className="mt-1 text-xs text-slate-500" title="Informação sobre a prévia">Mostrando até 5 primeiros contatos para verificação</p>
           <div className="mt-4 space-y-3">
             {previewRows.length === 0 && (
-              <p className="text-sm text-slate-400" title="Nenhum contato carregado ainda">Nenhum contato para prévia. Faça upload de um arquivo CSV.</p>
+              <p className="text-sm text-slate-400" title="Nenhum contato carregado ainda">Nenhum contato para prévia. Faça upload de um arquivo CSV ou Excel.</p>
             )}
             {previewRows.map((row, index) => (
               <div key={index} className="rounded-xl border border-slate-800 bg-slate-950 p-3 text-sm" title="Dados do contato extraídos do CSV">

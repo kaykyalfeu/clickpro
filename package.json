@@ -11,6 +11,7 @@
     "clikpro-whatsapp-app": "./index.js"
   },
   "dependencies": {
-    "better-sqlite3": "^9.4.3"
+    "better-sqlite3": "^9.4.3",
+    "exceljs": "^4.4.0"
   }
 }

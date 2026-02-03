@@ -18,7 +18,7 @@ const { initDb } = require('./lib/db');
 const jwt = require('./lib/jwt');
 const { hashPassword, verifyPassword } = require('./lib/password');
 const { encryptSecret, decryptSecret } = require('./lib/secret-store');
-const { parseCsv, normalizePhone } = require('./lib/csv');
+const { parseCsv, parseExcel, normalizePhone } = require('./lib/csv');
 
 // Utiliza a API fetch nativa do Node 18+. A versão mínima suportada é
 // Node.js 18, que já possui `global.fetch`. Se estiver em uma versão
@@ -745,9 +745,21 @@ const server = http.createServer((req, res) => {
       return;
     }
     readBody(req)
-      .then((body) => {
+      .then(async (body) => {
         const payload = JSON.parse(body || '{}');
-        const rows = parseCsv(payload.csv || '');
+        let rows = [];
+        
+        // Parse based on format - CSV text or Excel base64
+        if (payload.csv) {
+          rows = parseCsv(payload.csv);
+        } else if (payload.excel) {
+          // Convert base64 to buffer
+          const buffer = Buffer.from(payload.excel, 'base64');
+          rows = await parseExcel(buffer);
+        } else {
+          throw new Error('No CSV or Excel data provided');
+        }
+        
         const insert = db.prepare(
           'INSERT OR IGNORE INTO contacts (client_id, name, phone, email, created_at) VALUES (?, ?, ?, ?, ?)',
         );
@@ -773,7 +785,7 @@ const server = http.createServer((req, res) => {
         sendJson(res, 200, { inserted, invalid, total: rows.length });
       })
       .catch((error) => {
-        console.error(`[CONTACTS_IMPORT_ERROR] reason=parse_error user=${user.userId} client=${clientId}`);
+        console.error(`[CONTACTS_IMPORT_ERROR] reason=parse_error user=${user.userId} client=${clientId}`, error);
         sendJson(res, 400, { error: 'Falha ao importar contatos.' });
       });
     return;
