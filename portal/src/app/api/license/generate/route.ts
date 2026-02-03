@@ -4,13 +4,14 @@ import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { authOptions, isSuperAdmin, isAtLeastClientAdmin, getSessionClientId } from "@/lib/auth";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
+import type { Prisma } from "@prisma/client";
 
 interface GenerateLicenseRequest {
   clientId?: string;
   plan?: string;
   expiresInDays: number;
-  features?: Record<string, unknown>;
-  limits?: Record<string, unknown>;
+  features?: Prisma.InputJsonValue;
+  limits?: Prisma.InputJsonValue;
 }
 
 function generateLicenseKey(): string {
@@ -111,11 +112,8 @@ export async function POST(req: Request) {
         clientId: targetClientId,
         plan: body.plan || "standard",
         expiresAt,
-        features: body.features || {},
-        limits: body.limits || {},
-      },
-      include: {
-        client: true,
+        features: body.features ?? {},
+        limits: body.limits ?? {},
       },
     });
 
@@ -123,7 +121,7 @@ export async function POST(req: Request) {
       ok: true,
       licenseKey: license.token,
       clientId: license.clientId,
-      clientName: license.client?.name ?? client.name,
+      clientName: client.name,
       plan: license.plan,
       issuedAt: license.createdAt.toISOString(),
       expiresAt: license.expiresAt.toISOString(),
