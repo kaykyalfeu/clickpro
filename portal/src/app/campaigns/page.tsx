@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSession } from "next-auth/react";
 import ApiConfigCard from "@/components/ApiConfigCard";
+import ContactsEmptyState from "@/components/ContactsEmptyState";
 import DashboardHeader from "@/components/DashboardHeader";
 
 interface TemplateItem {
@@ -31,6 +33,7 @@ interface CampaignItem {
 const defaultBaseUrl = process.env.NEXT_PUBLIC_CLICKPRO_API_URL || "http://localhost:3001";
 
 export default function CampaignsPage() {
+  const { data: session, status: sessionStatus } = useSession();
   const [baseUrl, setBaseUrl] = useState(defaultBaseUrl);
   const [token, setToken] = useState("");
   const [clientId, setClientId] = useState("");
@@ -44,6 +47,9 @@ export default function CampaignsPage() {
   const [search, setSearch] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const canImportContacts =
+    sessionStatus === "authenticated" &&
+    (session?.user?.role === "SUPER_ADMIN" || session?.user?.role === "CLIENT_ADMIN");
 
   useEffect(() => {
     const stored = localStorage.getItem("clickpro-config");
@@ -261,7 +267,11 @@ export default function CampaignsPage() {
               </p>
               <div className="mt-3 max-h-56 space-y-2 overflow-y-auto rounded-xl border border-slate-800 bg-slate-950 p-3">
                 {contacts.length === 0 && (
-                  <p className="text-sm text-slate-400" title="Nenhum contato importado">Nenhum contato disponível. Importe contatos primeiro.</p>
+                  <ContactsEmptyState
+                    canImportContacts={canImportContacts}
+                    showPermissionMessage={sessionStatus === "authenticated"}
+                    importHref="/contacts"
+                  />
                 )}
                 {contacts.map((contact) => (
                   <label key={contact.id} className="flex items-center gap-2 text-sm text-slate-200 cursor-pointer hover:bg-slate-900 rounded px-2 py-1" title={`Selecionar ${contact.name || contact.phone}`}>
