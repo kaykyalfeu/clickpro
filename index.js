@@ -738,7 +738,9 @@ const server = http.createServer((req, res) => {
     if (!user) {
       return;
     }
-    if (!requireClientRole(user, clientId, ['CLIENT_ADMIN', 'CLIENT_USER'])) {
+    // Allow any authenticated user with client access to import contacts
+    if (!requireClientAccess(user, clientId)) {
+      console.log(`[CONTACTS_IMPORT_DENIED] reason=no_client_access user=${user.userId} client=${clientId}`);
       sendJson(res, 403, { error: 'Sem permissão.' });
       return;
     }
@@ -762,6 +764,7 @@ const server = http.createServer((req, res) => {
             inserted += 1;
           }
         });
+        console.log(`[CONTACTS_IMPORT_OK] user=${user.userId} client=${clientId} imported=${inserted} invalid=${invalid} total=${rows.length}`);
         logAudit('contacts.upload', {
           clientId,
           userId: user.userId,
@@ -770,7 +773,7 @@ const server = http.createServer((req, res) => {
         sendJson(res, 200, { inserted, invalid, total: rows.length });
       })
       .catch((error) => {
-        console.error('[CONTACT] Falha ao importar CSV:', error);
+        console.error(`[CONTACTS_IMPORT_ERROR] reason=parse_error user=${user.userId} client=${clientId}`);
         sendJson(res, 400, { error: 'Falha ao importar contatos.' });
       });
     return;
