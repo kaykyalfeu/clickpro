@@ -66,19 +66,23 @@ export async function GET() {
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2021") {
+        const missingTable = typeof error.meta?.table === "string" ? error.meta.table : "Client";
         return NextResponse.json(
           {
-            error: "Tabela Client não existe no banco. Rode a migração inicial no Supabase.",
+            error: `Tabela ${missingTable} não existe no banco. Rode a migração inicial no Supabase.`,
             requiresMigration: true,
+            missingTable,
           },
           { status: 500 }
         );
       }
       if (error.code === "P2022") {
+        const missingColumn = typeof error.meta?.column === "string" ? error.meta.column : "clientId";
         return NextResponse.json(
           {
-            error: "Banco sem a coluna clientId na tabela Client. Rode a migração de clientId no Supabase.",
+            error: `Banco sem a coluna ${missingColumn} na tabela Client. Rode a migração de clientId no Supabase.`,
             requiresMigration: true,
+            missingColumn,
           },
           { status: 500 }
         );
