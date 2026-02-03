@@ -31,20 +31,27 @@ export default function LicenseGenerator() {
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedClientId, setSelectedClientId] = useState("");
   const [loadingClients, setLoadingClients] = useState(false);
+  const [clientsError, setClientsError] = useState<string | null>(null);
 
   // Fetch clients when SUPER_ADMIN
   useEffect(() => {
     if (isSuperAdmin) {
       setLoadingClients(true);
-      fetch("/api/admin/clients")
+      setClientsError(null);
+      fetch("/api/admin/clients", { credentials: "include" })
         .then((res) => res.json())
         .then((data) => {
           if (data.ok) {
             setClients(data.clients);
+            if (!data.clients?.length) {
+              setClientsError("Nenhum cliente cadastrado ainda.");
+            }
+          } else {
+            setClientsError(data.error || "Erro ao carregar clientes.");
           }
         })
         .catch(() => {
-          // Silent fail
+          setClientsError("Erro ao carregar clientes.");
         })
         .finally(() => setLoadingClients(false));
     }
@@ -120,6 +127,11 @@ export default function LicenseGenerator() {
                 </option>
               ))}
             </select>
+            {clientsError && (
+              <p className="mt-2 text-xs text-amber-400">
+                {clientsError}
+              </p>
+            )}
           </div>
         )}
 
