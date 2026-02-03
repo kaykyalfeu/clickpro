@@ -18,7 +18,7 @@ export default function ContactsPage() {
   const [token, setToken] = useState("");
   const [clientId, setClientId] = useState("");
   const [csvText, setCsvText] = useState("");
-  const [excelData, setExcelData] = useState<string | null>(null); // base64 encoded Excel
+  const [excelDataBase64, setExcelDataBase64] = useState<string | null>(null); // base64 encoded Excel
   const [fileType, setFileType] = useState<"csv" | "excel">("csv");
   const [previewRows, setPreviewRows] = useState<PreviewRow[]>([]);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -104,13 +104,19 @@ export default function ContactsPage() {
     if (fileName.endsWith('.csv')) {
       const text = await file.text();
       setCsvText(text);
-      setExcelData(null);
+      setExcelDataBase64(null);
       setFileType("csv");
       setPreviewRows(parseCsvPreview(text));
     } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
       const buffer = await file.arrayBuffer();
-      const base64 = Buffer.from(buffer).toString('base64');
-      setExcelData(base64);
+      // Convert ArrayBuffer to base64 using browser-compatible method
+      const bytes = new Uint8Array(buffer);
+      let binary = '';
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const base64 = btoa(binary);
+      setExcelDataBase64(base64);
       setCsvText("");
       setFileType("excel");
       setPreviewRows(await parseExcelPreview(buffer));
@@ -125,7 +131,7 @@ export default function ContactsPage() {
     try {
       const body = fileType === "csv" 
         ? JSON.stringify({ csv: csvText })
-        : JSON.stringify({ excel: excelData });
+        : JSON.stringify({ excel: excelDataBase64 });
         
       const response = await fetch(`${baseUrl}/api/clients/${clientId}/contacts/upload`, {
         method: "POST",
@@ -215,7 +221,7 @@ Pedro Santos,5521777777777,pedro@email.com`}
                 value={csvText}
                 onChange={(event) => {
                   setCsvText(event.target.value);
-                  setExcelData(null);
+                  setExcelDataBase64(null);
                   setFileType("csv");
                   setPreviewRows(parseCsvPreview(event.target.value));
                 }}
