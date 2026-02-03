@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ApiConfigCard from "@/components/ApiConfigCard";
 import DashboardHeader from "@/components/DashboardHeader";
-import * as ExcelJS from "exceljs";
+import { getContactsImportError } from "@/lib/contactsImport";
 
 interface PreviewRow {
   name?: string;
@@ -23,6 +23,16 @@ export default function ContactsPage() {
   const [previewRows, setPreviewRows] = useState<PreviewRow[]>([]);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const importBlockingMessage = useMemo(
+    () =>
+      getContactsImportError({
+        baseUrl,
+        clientId,
+        token,
+        csvText,
+      }),
+    [baseUrl, clientId, token, csvText],
+  );
 
   useEffect(() => {
     const stored = localStorage.getItem("clickpro-config");
@@ -128,6 +138,10 @@ export default function ContactsPage() {
   async function uploadContacts() {
     setFeedback(null);
     setError(null);
+    if (importBlockingMessage) {
+      setError(importBlockingMessage);
+      return;
+    }
     try {
       const body = fileType === "csv" 
         ? JSON.stringify({ csv: csvText })
@@ -234,11 +248,17 @@ Pedro Santos,5521777777777,pedro@email.com`}
             <button
               type="button"
               onClick={uploadContacts}
-              className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-black hover:bg-slate-200"
+              disabled={Boolean(importBlockingMessage)}
+              className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-black hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
               title="Enviar contatos para o sistema"
             >
               Importar contatos
             </button>
+            {importBlockingMessage && (
+              <p className="text-xs text-amber-300" title="Preencha os dados obrigatórios antes de importar">
+                {importBlockingMessage}
+              </p>
+            )}
           </div>
         </section>
 

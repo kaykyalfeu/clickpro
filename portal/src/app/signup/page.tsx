@@ -4,9 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { Inter } from "next/font/google";
-
-const inter = Inter({ subsets: ["latin"] });
 
 const steps = [
   {
@@ -82,7 +79,7 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className={`${inter.className} min-h-screen bg-black text-white`}>
+    <div className="min-h-screen bg-black text-white font-sans">
       <div className="mx-auto flex min-h-screen max-w-6xl flex-col gap-8 px-6 py-10 lg:flex-row lg:items-stretch lg:gap-0">
         <section className="relative flex w-full flex-col justify-between rounded-3xl bg-gradient-to-b from-[#7c3aed] via-[#4c1d95] to-black px-10 py-12 lg:w-1/2">
           <div>

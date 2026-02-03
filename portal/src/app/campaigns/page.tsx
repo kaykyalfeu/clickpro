@@ -47,6 +47,9 @@ export default function CampaignsPage() {
   const [search, setSearch] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const canImportContacts =
+    sessionStatus === "authenticated" &&
+    (session?.user?.role === "SUPER_ADMIN" || session?.user?.role === "CLIENT_ADMIN");
 
   useEffect(() => {
     const stored = localStorage.getItem("clickpro-config");
@@ -265,7 +268,8 @@ export default function CampaignsPage() {
               <div className="mt-3 max-h-56 space-y-2 overflow-y-auto rounded-xl border border-slate-800 bg-slate-950 p-3">
                 {contacts.length === 0 && (
                   <ContactsEmptyState
-                    isAuthenticated={sessionStatus === "authenticated"}
+                    canImportContacts={canImportContacts}
+                    showPermissionMessage={sessionStatus === "authenticated"}
                     importHref="/contacts"
                   />
                 )}
