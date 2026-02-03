@@ -3,25 +3,26 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 const ContactsEmptyState = require("../src/components/ContactsEmptyState").default as typeof import("../src/components/ContactsEmptyState").default;
 
-const canImportHtml = renderToStaticMarkup(
+// Test: authenticated user should see import button
+const authenticatedHtml = renderToStaticMarkup(
   React.createElement(ContactsEmptyState, {
-    canImportContacts: true,
+    isAuthenticated: true,
     importHref: "/contacts",
-    showPermissionMessage: true,
   }),
 );
 
-assert.match(canImportHtml, /Importar contatos/);
-assert.match(canImportHtml, /href="\/contacts"/);
+assert.match(authenticatedHtml, /Importar contatos/);
+assert.match(authenticatedHtml, /href="\/contacts"/);
+assert.doesNotMatch(authenticatedHtml, /Sem permissão para importar/);
 
-const noPermissionHtml = renderToStaticMarkup(
+// Test: unauthenticated user should not see import button or permission message
+const unauthenticatedHtml = renderToStaticMarkup(
   React.createElement(ContactsEmptyState, {
-    canImportContacts: false,
-    showPermissionMessage: true,
+    isAuthenticated: false,
   }),
 );
 
-assert.match(noPermissionHtml, /Sem permissão para importar/);
-assert.doesNotMatch(noPermissionHtml, /Importar contatos/);
+assert.doesNotMatch(unauthenticatedHtml, /Sem permissão para importar/);
+assert.doesNotMatch(unauthenticatedHtml, /Importar contatos/);
 
 console.log("ContactsEmptyState rendering assertions passed.");
