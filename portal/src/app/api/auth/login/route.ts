@@ -182,6 +182,13 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Login validation error:", error);
+    console.error("PRISMA_ERROR_RAW", {
+      name: (error as { name?: string } | null)?.name,
+      code: (error as { code?: string } | null)?.code,
+      clientVersion: (error as { clientVersion?: string } | null)?.clientVersion,
+      meta: (error as { meta?: unknown } | null)?.meta,
+      message: (error as { message?: string } | null)?.message,
+    });
 
     // Check for Prisma database connection errors
     const dbConnectionErrors = ["P1000", "P1001", "P1002", "P1003"];
