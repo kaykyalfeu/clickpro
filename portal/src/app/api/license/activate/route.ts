@@ -96,7 +96,10 @@ export async function POST(req: Request) {
         {
           ok: false,
           reason: "SUPERSEDED",
-          error: "Licença substituída por uma nova. Gere/ative a licença mais recente.",
+          error: "Licença substituída por uma nova. Use a licença mais recente gerada para este cliente.",
+          clientId: license.clientId,
+          newerLicenseCreatedAt: newerActiveLicense.createdAt.toISOString(),
+          hint: "Solicite a nova chave de licença ao administrador ou gere uma nova no painel de admin.",
         },
         { status: 409 }
       );
