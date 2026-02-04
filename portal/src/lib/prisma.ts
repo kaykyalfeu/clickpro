@@ -2,6 +2,7 @@ import "server-only";
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
+import { normalizeDbUrl } from "@/lib/db-url";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient;
@@ -15,7 +16,11 @@ function createPrismaClient() {
     );
   }
 
-  const connectionString = process.env.DATABASE_URL;
+  const normalizedUrl = normalizeDbUrl(process.env.DATABASE_URL);
+  if (normalizedUrl && normalizedUrl !== process.env.DATABASE_URL) {
+    process.env.DATABASE_URL = normalizedUrl;
+  }
+  const connectionString = normalizedUrl ?? process.env.DATABASE_URL;
 
   const pool = globalForPrisma.pool || new Pool({ connectionString });
   const adapter = new PrismaPg(pool);
