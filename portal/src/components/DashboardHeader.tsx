@@ -42,11 +42,18 @@ export default function DashboardHeader() {
                 height={40}
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                  e.currentTarget.nextElementSibling?.removeAttribute("style");
+                  const target = e.currentTarget;
+                  const parent = target.parentElement;
+                  if (parent) {
+                    target.style.display = "none";
+                    const fallback = parent.querySelector("span");
+                    if (fallback && fallback instanceof HTMLElement) {
+                      fallback.style.display = "block";
+                    }
+                  }
                 }}
               />
-              <span style={{ display: "none" }}>CP</span>
+              <span className="hidden">CP</span>
             </div>
             <div>
               <h1 className="text-lg font-bold" style={{ color: "var(--text)" }}>

@@ -15,6 +15,7 @@ export default function ThemeToggle() {
         backgroundColor: "var(--surface-2)",
         color: "var(--text)",
         boxShadow: `0 0 0 0 var(--ring)`,
+        filter: theme === "light" ? "brightness(0.4)" : "none",
       }}
       onFocus={(e) => {
         e.currentTarget.style.boxShadow = `0 0 0 3px var(--ring)`;
