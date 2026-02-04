@@ -146,6 +146,19 @@ export async function POST(request: Request) {
       );
     }
 
+    // Check if user has a password (OAuth users may not)
+    if (!user.passwordHash) {
+      console.log(`[LOGIN_401] reason=oauth_account email=${normalizedEmail} userId=${user.id} env=${process.env.VERCEL_ENV || 'local'}`);
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Esta conta usa login social (Google ou GitHub). Use o botão correspondente para entrar.",
+          code: "OAUTH_ACCOUNT",
+        },
+        { status: 401 }
+      );
+    }
+
     // Verify password
     const isValid = verifyPassword(password, user.passwordHash);
     if (!isValid) {
