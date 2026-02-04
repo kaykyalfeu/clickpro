@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import ApiConfigCard from "@/components/ApiConfigCard";
 import ContactsEmptyState from "@/components/ContactsEmptyState";
 import DashboardHeader from "@/components/DashboardHeader";
+import { formatActivationError } from "@/lib/license.client";
 
 interface TemplateItem {
   id: number;
@@ -30,22 +31,7 @@ interface CampaignItem {
   sent_contacts: number;
 }
 
-interface ActivationErrorResponse {
-  ok: false;
-  error?: string;
-  reason?: string;
-  hint?: string;
-}
-
 const defaultBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://clickpro.grupogarciaseguradoras.com.br";
-
-function formatActivationError(data: ActivationErrorResponse): string {
-  const baseError = data.error || data.reason || "Falha ao ativar licença.";
-  if (data.hint) {
-    return `${baseError} — ${data.hint}`;
-  }
-  return baseError;
-}
 
 export default function CampaignsClient() {
   const { data: session, status: sessionStatus } = useSession();
