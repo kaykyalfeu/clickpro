@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import ApiConfigCard from "@/components/ApiConfigCard";
 import ContactsEmptyState from "@/components/ContactsEmptyState";
 import DashboardHeader from "@/components/DashboardHeader";
+import { formatActivationError } from "@/lib/license";
 
 interface TemplateItem {
   id: number;
@@ -51,9 +52,6 @@ export default function CampaignsPage() {
   const [search, setSearch] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const canImportContacts =
-    sessionStatus === "authenticated" &&
-    (session?.user?.role === "SUPER_ADMIN" || session?.user?.role === "CLIENT_ADMIN");
 
   useEffect(() => {
     const storedJwt = localStorage.getItem("CLICKPRO_JWT");
@@ -100,7 +98,7 @@ export default function CampaignsPage() {
       });
       const data = await response.json();
       if (!response.ok || !data.ok) {
-        setActivationError(data.error || data.reason || "Falha ao ativar licença.");
+        setActivationError(formatActivationError(data));
         return;
       }
       const resolvedClientId = data.clientId ?? clientId;
@@ -326,8 +324,7 @@ export default function CampaignsPage() {
               <div className="mt-3 max-h-56 space-y-2 overflow-y-auto rounded-xl border border-slate-800 bg-slate-950 p-3">
                 {contacts.length === 0 && (
                   <ContactsEmptyState
-                    canImportContacts={canImportContacts}
-                    showPermissionMessage={sessionStatus === "authenticated"}
+                    isAuthenticated={sessionStatus === "authenticated"}
                     importHref="/contacts"
                   />
                 )}
