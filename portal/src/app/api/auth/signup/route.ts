@@ -132,11 +132,19 @@ export async function POST(request: Request) {
     );
   } catch (error) {
     console.error("Signup error:", error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2021") {
-      return NextResponse.json(
-        { error: "Banco não inicializado. Execute as migrations do Prisma antes de cadastrar usuários." },
-        { status: 500 }
-      );
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2021") {
+        return NextResponse.json(
+          { error: "Banco não inicializado. Execute as migrations do Prisma antes de cadastrar usuários." },
+          { status: 500 }
+        );
+      }
+      if (error.code === "P2022") {
+        return NextResponse.json(
+          { error: "Banco desatualizado. Rode as migrations do Prisma para criar a coluna clientId." },
+          { status: 500 }
+        );
+      }
     }
     return NextResponse.json(
       { error: "Erro interno do servidor" },
