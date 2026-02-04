@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import ApiConfigCard from "@/components/ApiConfigCard";
 import DashboardHeader from "@/components/DashboardHeader";
+import { formatActivationError } from "@/lib/license";
 
 const defaultBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://clickpro.grupogarciaseguradoras.com.br";
 
@@ -74,7 +75,7 @@ export default function CredentialsPage() {
       });
       const data = await response.json();
       if (!response.ok || !data.ok) {
-        setActivationError(data.error || data.reason || "Falha ao ativar licença.");
+        setActivationError(formatActivationError(data));
         return;
       }
       const resolvedClientId = data.clientId ?? clientId;

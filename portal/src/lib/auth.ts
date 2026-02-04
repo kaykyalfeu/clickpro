@@ -1,10 +1,30 @@
 import crypto from "crypto";
 import type { NextAuthOptions, Session } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
+import GitHubProvider from "next-auth/providers/github";
 import { prisma } from "./prisma";
 
 // Role enum matching prisma schema
 export type Role = "SUPER_ADMIN" | "CLIENT_ADMIN" | "CLIENT_USER";
+
+// Generate a unique slug from name
+function generateSlug(name: string): string {
+  const base = name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Remove accents
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .substring(0, 30);
+  const suffix = crypto.randomBytes(4).toString("hex");
+  return `${base}-${suffix}`;
+}
+
+// Generate a unique client ID
+function generateClientId(): string {
+  return `cli_${crypto.randomBytes(8).toString("hex")}`;
+}
 
 // Reuse the same hash algorithm from seed-admin.ts
 function verifyPassword(password: string, storedHash: string): boolean {
@@ -54,6 +74,32 @@ declare module "next-auth/jwt" {
 
 export const authOptions: NextAuthOptions = {
   providers: [
+    // Google OAuth Provider
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            authorization: {
+              params: {
+                prompt: "consent",
+                access_type: "offline",
+                response_type: "code",
+              },
+            },
+          }),
+        ]
+      : []),
+    // GitHub OAuth Provider
+    ...(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET
+      ? [
+          GitHubProvider({
+            clientId: process.env.GITHUB_CLIENT_ID,
+            clientSecret: process.env.GITHUB_CLIENT_SECRET,
+          }),
+        ]
+      : []),
+    // Credentials Provider (Email/Password)
     CredentialsProvider({
       name: "credentials",
       credentials: {
@@ -91,6 +137,12 @@ export const authOptions: NextAuthOptions = {
           if (!user) {
             console.log(`Login failed: user not found for email ${credentials.email}`);
             throw new Error("Usuário não encontrado");
+          }
+
+          // Check if user has password (OAuth users may not have one)
+          if (!user.passwordHash) {
+            console.log(`Login failed: user ${credentials.email} has no password (OAuth account)`);
+            throw new Error("Esta conta usa login social. Use Google ou GitHub para entrar.");
           }
 
           const isValid = verifyPassword(credentials.password, user.passwordHash);
@@ -137,8 +189,123 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
+    async signIn({ user, account }) {
+      // Only handle OAuth providers (Google, GitHub)
+      if (account?.provider === "google" || account?.provider === "github") {
+        try {
+          const email = user.email?.toLowerCase().trim();
+          if (!email) {
+            console.error("OAuth login failed: no email provided");
+            return false;
+          }
+
+          const providerIdField = account.provider === "google" ? "googleId" : "githubId";
+          const providerId = account.providerAccountId;
+
+          // Check if user already exists by email
+          let existingUser = await prisma.user.findUnique({
+            where: { email },
+            include: {
+              memberships: {
+                take: 1,
+                include: { client: true },
+              },
+            },
+          });
+
+          if (existingUser) {
+            // Update OAuth provider ID if not already set
+            const currentProviderId = account.provider === "google"
+              ? existingUser.googleId
+              : existingUser.githubId;
+
+            if (!currentProviderId) {
+              await prisma.user.update({
+                where: { id: existingUser.id },
+                data: {
+                  [providerIdField]: providerId,
+                  image: user.image ?? existingUser.image,
+                },
+              });
+              console.log(`OAuth: Linked ${account.provider} to existing user ${email}`);
+            }
+          } else {
+            // Create new user with client in a transaction
+            const userName = user.name || email.split("@")[0];
+            const slug = generateSlug(userName);
+            const clientId = generateClientId();
+
+            await prisma.$transaction(async (tx) => {
+              // Create client first
+              const client = await tx.client.create({
+                data: {
+                  clientId,
+                  name: `${userName}'s Workspace`,
+                  slug,
+                },
+              });
+
+              // Create user
+              const newUser = await tx.user.create({
+                data: {
+                  email,
+                  name: userName,
+                  image: user.image,
+                  [providerIdField]: providerId,
+                  role: "CLIENT_ADMIN",
+                },
+              });
+
+              // Create membership linking user to client
+              await tx.clientMember.create({
+                data: {
+                  userId: newUser.id,
+                  clientId: client.id,
+                  role: "CLIENT_ADMIN",
+                },
+              });
+
+              console.log(`OAuth: Created new user ${email} with client ${client.name}`);
+            });
+          }
+
+          return true;
+        } catch (error) {
+          console.error("OAuth signIn error:", error);
+          return false;
+        }
+      }
+
+      // For credentials provider, just allow (validation happens in authorize)
+      return true;
+    },
+    async jwt({ token, user, account }) {
+      // For OAuth login, fetch user data from database
+      if (account && (account.provider === "google" || account.provider === "github")) {
+        const email = token.email?.toLowerCase().trim();
+        if (email) {
+          const dbUser = await prisma.user.findUnique({
+            where: { email },
+            include: {
+              memberships: {
+                take: 1,
+                include: { client: true },
+              },
+            },
+          });
+
+          if (dbUser) {
+            const membership = dbUser.role === "SUPER_ADMIN" ? null : dbUser.memberships?.[0];
+            token.id = dbUser.id;
+            token.email = dbUser.email;
+            token.name = dbUser.name;
+            token.role = dbUser.role as Role;
+            token.clientId = membership?.clientId ?? null;
+            token.clientName = membership?.client?.name ?? null;
+          }
+        }
+      } else if (user) {
+        // For credentials provider, use the user object directly
         token.id = user.id;
         token.email = user.email;
         token.name = user.name;
