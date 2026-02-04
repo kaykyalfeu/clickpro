@@ -66,35 +66,64 @@ export default function UsersMetrics() {
   };
 
   return (
-    <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
+    <div
+      className="border rounded-2xl p-6"
+      style={{
+        backgroundColor: "var(--surface)",
+        borderColor: "var(--border)",
+        boxShadow: `0 1px 3px var(--shadow)`,
+      }}
+    >
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-white">Usuarios Recentes</h3>
-        <span className="text-sm text-slate-400">{users.length} usuarios</span>
+        <h3 className="text-lg font-semibold" style={{ color: "var(--text)" }}>
+          Usuarios Recentes
+        </h3>
+        <span className="text-sm" style={{ color: "var(--text-muted)" }}>
+          {users.length} usuarios
+        </span>
       </div>
 
       {loading ? (
         <div className="space-y-3">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-12 bg-slate-700/50 rounded animate-pulse" />
+            <div
+              key={i}
+              className="h-12 rounded animate-pulse"
+              style={{ backgroundColor: "var(--surface-2)" }}
+            />
           ))}
         </div>
       ) : users.length === 0 ? (
-        <p className="text-slate-400 text-center py-8">Nenhum usuario encontrado</p>
+        <p className="text-center py-8" style={{ color: "var(--text-muted)" }}>
+          Nenhum usuario encontrado
+        </p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-700">
-                <th className="text-left text-sm font-medium text-slate-400 pb-3">
+              <tr className="border-b" style={{ borderColor: "var(--border)" }}>
+                <th
+                  className="text-left text-sm font-medium pb-3"
+                  style={{ color: "var(--text-muted)" }}
+                >
                   Usuario
                 </th>
-                <th className="text-left text-sm font-medium text-slate-400 pb-3">
+                <th
+                  className="text-left text-sm font-medium pb-3"
+                  style={{ color: "var(--text-muted)" }}
+                >
                   Perfil
                 </th>
-                <th className="text-left text-sm font-medium text-slate-400 pb-3">
+                <th
+                  className="text-left text-sm font-medium pb-3"
+                  style={{ color: "var(--text-muted)" }}
+                >
                   Cliente
                 </th>
-                <th className="text-left text-sm font-medium text-slate-400 pb-3">
+                <th
+                  className="text-left text-sm font-medium pb-3"
+                  style={{ color: "var(--text-muted)" }}
+                >
                   Criado em
                 </th>
               </tr>
@@ -103,12 +132,17 @@ export default function UsersMetrics() {
               {users.map((user) => (
                 <tr
                   key={user.id}
-                  className="border-b border-slate-700/50 hover:bg-slate-700/20"
+                  className="border-b"
+                  style={{ borderColor: "var(--border)" }}
                 >
                   <td className="py-3">
                     <div>
-                      <p className="text-white font-medium">{user.name || "-"}</p>
-                      <p className="text-slate-400 text-sm">{user.email}</p>
+                      <p className="font-medium" style={{ color: "var(--text)" }}>
+                        {user.name || "-"}
+                      </p>
+                      <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                        {user.email}
+                      </p>
                     </div>
                   </td>
                   <td className="py-3">
@@ -120,10 +154,10 @@ export default function UsersMetrics() {
                       {roleLabels[user.role] || user.role}
                     </span>
                   </td>
-                  <td className="py-3 text-slate-300">
+                  <td className="py-3" style={{ color: "var(--text)" }}>
                     {user.clientName || "-"}
                   </td>
-                  <td className="py-3 text-slate-400 text-sm">
+                  <td className="py-3 text-sm" style={{ color: "var(--text-muted)" }}>
                     {formatDate(user.createdAt)}
                   </td>
                 </tr>

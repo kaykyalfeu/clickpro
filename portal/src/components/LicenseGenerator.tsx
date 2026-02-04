@@ -101,14 +101,23 @@ export default function LicenseGenerator() {
   };
 
   return (
-    <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
-      <h3 className="text-lg font-semibold text-white mb-4">Gerar Nova Licença</h3>
+    <div
+      className="border rounded-2xl p-6"
+      style={{
+        backgroundColor: "var(--surface)",
+        borderColor: "var(--border)",
+        boxShadow: `0 1px 3px var(--shadow)`,
+      }}
+    >
+      <h3 className="text-lg font-semibold mb-4" style={{ color: "var(--text)" }}>
+        Gerar Nova Licença
+      </h3>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Client selector for SUPER_ADMIN */}
         {isSuperAdmin && (
           <div>
-            <label className="block text-sm text-slate-400 mb-1">
+            <label className="block text-sm mb-1" style={{ color: "var(--text-muted)" }}>
               Cliente *
             </label>
             <select
@@ -116,7 +125,12 @@ export default function LicenseGenerator() {
               onChange={(e) => setSelectedClientId(e.target.value)}
               required
               disabled={loadingClients}
-              className="w-full px-4 py-2 rounded-lg bg-slate-900 border border-slate-600 text-white focus:outline-none focus:border-violet-500 disabled:opacity-50"
+              className="w-full px-4 py-2 rounded-lg border focus:outline-none disabled:opacity-50"
+              style={{
+                backgroundColor: "var(--surface-2)",
+                borderColor: "var(--border)",
+                color: "var(--text)",
+              }}
             >
               <option value="">
                 {loadingClients ? "Carregando..." : "Selecione um cliente"}
@@ -137,7 +151,7 @@ export default function LicenseGenerator() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm text-slate-400 mb-1">
+            <label className="block text-sm mb-1" style={{ color: "var(--text-muted)" }}>
               Nome do Cliente (opcional)
             </label>
             <input
@@ -145,12 +159,17 @@ export default function LicenseGenerator() {
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
               placeholder="Ex: Empresa ABC"
-              className="w-full px-4 py-2 rounded-lg bg-slate-900 border border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:border-violet-500"
+              className="w-full px-4 py-2 rounded-lg border focus:outline-none"
+              style={{
+                backgroundColor: "var(--surface-2)",
+                borderColor: "var(--border)",
+                color: "var(--text)",
+              }}
             />
           </div>
 
           <div>
-            <label className="block text-sm text-slate-400 mb-1">
+            <label className="block text-sm mb-1" style={{ color: "var(--text-muted)" }}>
               Email (opcional)
             </label>
             <input
@@ -158,14 +177,19 @@ export default function LicenseGenerator() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="cliente@empresa.com"
-              className="w-full px-4 py-2 rounded-lg bg-slate-900 border border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:border-violet-500"
+              className="w-full px-4 py-2 rounded-lg border focus:outline-none"
+              style={{
+                backgroundColor: "var(--surface-2)",
+                borderColor: "var(--border)",
+                color: "var(--text)",
+              }}
             />
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm text-slate-400 mb-1">
+            <label className="block text-sm mb-1" style={{ color: "var(--text-muted)" }}>
               Validade (dias)
             </label>
             <input
@@ -174,12 +198,17 @@ export default function LicenseGenerator() {
               onChange={(e) => setExpiresInDays(Number(e.target.value))}
               min={1}
               max={3650}
-              className="w-full px-4 py-2 rounded-lg bg-slate-900 border border-slate-600 text-white focus:outline-none focus:border-violet-500"
+              className="w-full px-4 py-2 rounded-lg border focus:outline-none"
+              style={{
+                backgroundColor: "var(--surface-2)",
+                borderColor: "var(--border)",
+                color: "var(--text)",
+              }}
             />
           </div>
 
           <div>
-            <label className="block text-sm text-slate-400 mb-1">
+            <label className="block text-sm mb-1" style={{ color: "var(--text-muted)" }}>
               Notas (opcional)
             </label>
             <input
@@ -187,7 +216,12 @@ export default function LicenseGenerator() {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Observações internas"
-              className="w-full px-4 py-2 rounded-lg bg-slate-900 border border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:border-violet-500"
+              className="w-full px-4 py-2 rounded-lg border focus:outline-none"
+              style={{
+                backgroundColor: "var(--surface-2)",
+                borderColor: "var(--border)",
+                color: "var(--text)",
+              }}
             />
           </div>
         </div>
@@ -195,7 +229,11 @@ export default function LicenseGenerator() {
         <button
           type="submit"
           disabled={loading || (isSuperAdmin && !selectedClientId)}
-          className="px-6 py-2 rounded-lg bg-violet-600 text-white font-medium hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            backgroundColor: "var(--primary)",
+            color: "var(--primary-contrast)",
+          }}
         >
           {loading ? "Gerando..." : "Gerar Licença"}
         </button>
@@ -208,22 +246,38 @@ export default function LicenseGenerator() {
       )}
 
       {result && (
-        <div className="mt-4 p-4 rounded-lg bg-emerald-500/20 border border-emerald-500/50">
-          <p className="text-emerald-300 text-sm font-medium mb-2">
+        <div
+          className="mt-4 p-4 rounded-lg border"
+          style={{
+            backgroundColor: "rgba(34, 197, 94, 0.1)",
+            borderColor: "rgba(34, 197, 94, 0.3)",
+          }}
+        >
+          <p className="text-sm font-medium mb-2" style={{ color: "var(--success)" }}>
             Licença gerada com sucesso!
           </p>
           <div className="flex items-center gap-2">
-            <code className="flex-1 px-3 py-2 rounded bg-slate-900 text-slate-200 text-sm font-mono overflow-x-auto">
+            <code
+              className="flex-1 px-3 py-2 rounded text-sm font-mono overflow-x-auto"
+              style={{
+                backgroundColor: "var(--surface-2)",
+                color: "var(--text)",
+              }}
+            >
               {result.licenseKey}
             </code>
             <button
               onClick={copyToClipboard}
-              className="px-3 py-2 rounded bg-slate-700 text-white text-sm hover:bg-slate-600 transition-colors"
+              className="px-3 py-2 rounded text-sm transition-colors"
+              style={{
+                backgroundColor: "var(--surface-2)",
+                color: "var(--text)",
+              }}
             >
               Copiar
             </button>
           </div>
-          <p className="text-slate-400 text-xs mt-2">
+          <p className="text-xs mt-2" style={{ color: "var(--text-muted)" }}>
             Expira em: {new Date(result.expiresAt).toLocaleDateString("pt-BR")}
           </p>
         </div>

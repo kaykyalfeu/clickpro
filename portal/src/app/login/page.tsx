@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import { getSession, signIn, signOut } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import PasswordInput from "@/components/PasswordInput";
 
 function LoginForm() {
@@ -141,8 +142,15 @@ function LoginForm() {
   }
 
   return (
-    <div className="bg-slate-800/50 rounded-2xl p-8 border border-slate-700/50 shadow-xl">
-      <h2 className="text-xl font-semibold text-white text-center mb-6">
+    <div
+      className="rounded-2xl p-8 border shadow-xl"
+      style={{
+        backgroundColor: "var(--surface)",
+        borderColor: "var(--border-strong)",
+        boxShadow: `0 10px 25px var(--shadow)`,
+      }}
+    >
+      <h2 className="text-xl font-semibold text-center mb-6" style={{ color: "var(--text)" }}>
         Entrar no Portal
       </h2>
 
@@ -152,7 +160,12 @@ function LoginForm() {
           type="button"
           onClick={() => handleOAuthSignIn("google")}
           disabled={oauthLoading !== null || loading || superAdminLoading}
-          className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-slate-900/50 border border-slate-600 text-white text-sm font-medium hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border text-sm font-medium focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            backgroundColor: "var(--surface-2)",
+            borderColor: "var(--border)",
+            color: "var(--text)",
+          }}
         >
           {oauthLoading === "google" ? (
             <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
@@ -170,7 +183,12 @@ function LoginForm() {
           type="button"
           onClick={() => handleOAuthSignIn("github")}
           disabled={oauthLoading !== null || loading || superAdminLoading}
-          className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-slate-900/50 border border-slate-600 text-white text-sm font-medium hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border text-sm font-medium focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            backgroundColor: "var(--surface-2)",
+            borderColor: "var(--border)",
+            color: "var(--text)",
+          }}
         >
           {oauthLoading === "github" ? (
             <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
@@ -187,14 +205,16 @@ function LoginForm() {
       </div>
 
       <div className="flex items-center gap-3 mb-6">
-        <span className="h-px flex-1 bg-slate-700" />
-        <span className="text-xs text-slate-500">ou continue com email</span>
-        <span className="h-px flex-1 bg-slate-700" />
+        <span className="h-px flex-1" style={{ backgroundColor: "var(--border)" }} />
+        <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+          ou continue com email
+        </span>
+        <span className="h-px flex-1" style={{ backgroundColor: "var(--border)" }} />
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
+          <label htmlFor="email" className="block text-sm font-medium mb-2" style={{ color: "var(--text)" }}>
             Email
           </label>
           <input
@@ -205,7 +225,12 @@ function LoginForm() {
             placeholder="seu@email.com"
             required
             autoComplete="email"
-            className="w-full px-4 py-3 rounded-xl bg-slate-900/50 border border-slate-600 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all"
+            className="w-full px-4 py-3 rounded-xl border focus:outline-none transition-all"
+            style={{
+              backgroundColor: "var(--surface-2)",
+              borderColor: "var(--border)",
+              color: "var(--text)",
+            }}
           />
         </div>
 
@@ -223,14 +248,22 @@ function LoginForm() {
         <div className="flex justify-end">
           <Link
             href="/forgot-password"
-            className="text-xs text-violet-400 hover:text-violet-300 transition-colors"
+            className="text-xs transition-colors"
+            style={{ color: "var(--primary)" }}
           >
             Esqueci minha senha
           </Link>
         </div>
 
         {error && (
-          <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm text-center">
+          <div
+            className="p-3 rounded-lg border text-sm text-center"
+            style={{
+              backgroundColor: "rgba(239, 68, 68, 0.1)",
+              borderColor: "rgba(239, 68, 68, 0.3)",
+              color: "var(--danger)",
+            }}
+          >
             {error}
           </div>
         )}
@@ -238,7 +271,12 @@ function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 rounded-xl bg-violet-600 text-white font-semibold hover:bg-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-violet-500/30"
+          className="w-full py-3 rounded-xl font-semibold focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            backgroundColor: "var(--primary)",
+            color: "var(--primary-contrast)",
+            boxShadow: "0 4px 12px rgba(124, 58, 237, 0.25)",
+          }}
         >
           {loading ? "Entrando..." : "Entrar"}
         </button>
@@ -247,7 +285,8 @@ function LoginForm() {
           type="button"
           onClick={handleSuperAdminLogin}
           disabled={superAdminLoading}
-          className="w-full py-2 text-xs text-slate-400 hover:text-slate-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-2 text-xs transition disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ color: "var(--text-muted)" }}
         >
           {superAdminLoading ? "Entrando como super admin..." : "Acesso super admin"}
         </button>
@@ -258,14 +297,21 @@ function LoginForm() {
 
 function LoginFormFallback() {
   return (
-    <div className="bg-slate-800/50 rounded-2xl p-8 border border-slate-700/50 shadow-xl">
-      <h2 className="text-xl font-semibold text-white text-center mb-6">
+    <div
+      className="rounded-2xl p-8 border shadow-xl"
+      style={{
+        backgroundColor: "var(--surface)",
+        borderColor: "var(--border-strong)",
+        boxShadow: `0 10px 25px var(--shadow)`,
+      }}
+    >
+      <h2 className="text-xl font-semibold text-center mb-6" style={{ color: "var(--text)" }}>
         Entrar no Portal
       </h2>
       <div className="animate-pulse space-y-5">
-        <div className="h-12 bg-slate-700 rounded-xl" />
-        <div className="h-12 bg-slate-700 rounded-xl" />
-        <div className="h-12 bg-violet-600/50 rounded-xl" />
+        <div className="h-12 rounded-xl" style={{ backgroundColor: "var(--surface-2)" }} />
+        <div className="h-12 rounded-xl" style={{ backgroundColor: "var(--surface-2)" }} />
+        <div className="h-12 rounded-xl" style={{ backgroundColor: "var(--primary)", opacity: 0.5 }} />
       </div>
     </div>
   );
@@ -273,17 +319,46 @@ function LoginFormFallback() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-slate-900 to-slate-950">
+    <div className="min-h-screen flex flex-col items-center justify-center" style={{ background: "linear-gradient(to bottom, var(--bg), var(--bg-elevated))" }}>
       <div className="w-full max-w-md px-6">
         {/* Logo */}
         <div className="flex items-center justify-center gap-3 mb-8">
           <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <div className="w-12 h-12 rounded-xl bg-violet-600 flex items-center justify-center text-xl font-bold text-white shadow-lg shadow-violet-500/30">
-              CP
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold shadow-lg overflow-hidden"
+              style={{
+                backgroundColor: "var(--primary)",
+                color: "var(--primary-contrast)",
+                boxShadow: "0 4px 12px rgba(124, 58, 237, 0.25)",
+              }}
+            >
+              <Image
+                src="/logo.png"
+                alt="ClickPro Logo"
+                width={48}
+                height={48}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  const parent = target.parentElement;
+                  if (parent) {
+                    target.style.display = "none";
+                    const fallback = parent.querySelector("span");
+                    if (fallback && fallback instanceof HTMLElement) {
+                      fallback.style.display = "block";
+                    }
+                  }
+                }}
+              />
+              <span className="hidden">CP</span>
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">ClickPro</h1>
-              <p className="text-sm text-slate-400">Portal de Licenciamento</p>
+              <h1 className="text-2xl font-bold" style={{ color: "var(--text)" }}>
+                ClickPro
+              </h1>
+              <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                Portal de Licenciamento
+              </p>
             </div>
           </Link>
         </div>
@@ -293,12 +368,12 @@ export default function LoginPage() {
           <LoginForm />
         </Suspense>
 
-        <p className="text-center text-slate-500 text-sm mt-6">
+        <p className="text-center text-sm mt-6" style={{ color: "var(--text-muted)" }}>
           &copy; {new Date().getFullYear()} ClickPro. Todos os direitos reservados.
         </p>
-        <p className="text-center text-slate-400 text-sm mt-2">
+        <p className="text-center text-sm mt-2" style={{ color: "var(--text-muted)" }}>
           Ainda não tem conta?{" "}
-          <Link href="/signup" className="text-violet-300 hover:text-violet-200">
+          <Link href="/signup" style={{ color: "var(--primary)" }}>
             Criar conta
           </Link>
         </p>

@@ -52,12 +52,21 @@ export default function LicenseValidator() {
   };
 
   return (
-    <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
-      <h3 className="text-lg font-semibold text-white mb-4">Validar Licença</h3>
+    <div
+      className="border rounded-2xl p-6"
+      style={{
+        backgroundColor: "var(--surface)",
+        borderColor: "var(--border)",
+        boxShadow: `0 1px 3px var(--shadow)`,
+      }}
+    >
+      <h3 className="text-lg font-semibold mb-4" style={{ color: "var(--text)" }}>
+        Validar Licença
+      </h3>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm text-slate-400 mb-1">
+          <label className="block text-sm mb-1" style={{ color: "var(--text-muted)" }}>
             Chave de Licença
           </label>
           <input
@@ -65,56 +74,82 @@ export default function LicenseValidator() {
             value={licenseKey}
             onChange={(e) => setLicenseKey(e.target.value)}
             placeholder="Cole a chave de licença aqui"
-            className="w-full px-4 py-2 rounded-lg bg-slate-900 border border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 font-mono text-sm"
+            className="w-full px-4 py-2 rounded-lg border focus:outline-none font-mono text-sm"
+            style={{
+              backgroundColor: "var(--surface-2)",
+              borderColor: "var(--border)",
+              color: "var(--text)",
+            }}
           />
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="px-6 py-2 rounded-lg bg-slate-700 text-white font-medium hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            backgroundColor: "var(--surface-2)",
+            color: "var(--text)",
+            borderColor: "var(--border)",
+            border: "1px solid",
+          }}
         >
           {loading ? "Validando..." : "Validar"}
         </button>
       </form>
 
       {error && (
-        <div className="mt-4 p-3 rounded-lg bg-red-500/20 border border-red-500/50 text-red-300 text-sm">
+        <div
+          className="mt-4 p-3 rounded-lg border text-sm"
+          style={{
+            backgroundColor: "rgba(239, 68, 68, 0.1)",
+            borderColor: "rgba(239, 68, 68, 0.3)",
+            color: "var(--danger)",
+          }}
+        >
           {error}
         </div>
       )}
 
       {result && (
         <div
-          className={`mt-4 p-4 rounded-lg ${
-            result.valid
-              ? "bg-emerald-500/20 border border-emerald-500/50"
-              : "bg-red-500/20 border border-red-500/50"
-          }`}
+          className={`mt-4 p-4 rounded-lg border`}
+          style={{
+            backgroundColor: result.valid
+              ? "rgba(34, 197, 94, 0.1)"
+              : "rgba(239, 68, 68, 0.1)",
+            borderColor: result.valid
+              ? "rgba(34, 197, 94, 0.3)"
+              : "rgba(239, 68, 68, 0.3)",
+          }}
         >
           <div className="flex items-center gap-2">
             <span
-              className={`w-3 h-3 rounded-full ${
-                result.valid ? "bg-emerald-400" : "bg-red-400"
-              }`}
+              className="w-3 h-3 rounded-full"
+              style={{
+                backgroundColor: result.valid ? "var(--success)" : "var(--danger)",
+              }}
             />
             <p
-              className={`font-medium ${
-                result.valid ? "text-emerald-300" : "text-red-300"
-              }`}
+              className="font-medium"
+              style={{
+                color: result.valid ? "var(--success)" : "var(--danger)",
+              }}
             >
               {result.valid ? "Licença válida" : "Licença inválida"}
             </p>
           </div>
 
           {result.expiresAt && (
-            <p className="text-slate-400 text-sm mt-2">
+            <p className="text-sm mt-2" style={{ color: "var(--text-muted)" }}>
               Expira em: {new Date(result.expiresAt).toLocaleDateString("pt-BR")}
             </p>
           )}
 
           {result.reason && (
-            <p className="text-slate-400 text-sm mt-1">Motivo: {result.reason}</p>
+            <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
+              Motivo: {result.reason}
+            </p>
           )}
         </div>
       )}

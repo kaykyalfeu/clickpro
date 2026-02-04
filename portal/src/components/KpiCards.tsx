@@ -19,12 +19,26 @@ function KpiCard({ title, value, subtitle, trend, loading }: KpiCardProps) {
   };
 
   return (
-    <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6">
-      <p className="text-slate-400 text-sm font-medium">{title}</p>
+    <div
+      className="border rounded-2xl p-6"
+      style={{
+        backgroundColor: "var(--surface)",
+        borderColor: "var(--border)",
+        boxShadow: `0 1px 3px var(--shadow)`,
+      }}
+    >
+      <p className="text-sm font-medium" style={{ color: "var(--text-muted)" }}>
+        {title}
+      </p>
       {loading ? (
-        <div className="h-9 mt-2 bg-slate-700/50 rounded animate-pulse" />
+        <div
+          className="h-9 mt-2 rounded animate-pulse"
+          style={{ backgroundColor: "var(--surface-2)" }}
+        />
       ) : (
-        <p className="text-3xl font-bold text-white mt-2">{value}</p>
+        <p className="text-3xl font-bold mt-2" style={{ color: "var(--text)" }}>
+          {value}
+        </p>
       )}
       {subtitle && !loading && (
         <p className={`text-sm mt-1 ${trend ? trendColors[trend] : "text-slate-500"}`}>
