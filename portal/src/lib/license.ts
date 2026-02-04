@@ -1,4 +1,11 @@
+import "server-only";
 import crypto from "crypto";
+
+// Re-export client-safe utilities for backward compatibility with API routes
+export {
+  formatActivationError,
+  type ActivationErrorResponse,
+} from "./license.client";
 
 export interface LicenseStatus {
   hasLicense: boolean;
@@ -94,27 +101,4 @@ export function verifyLicense(token: string, secret: string): VerifyLicenseResul
   if (now > exp) return { ok: false, reason: "EXPIRED" as const };
 
   return { ok: true as const, payload };
-}
-
-// ============================================
-// License Activation Error Formatting
-// ============================================
-
-export interface ActivationErrorResponse {
-  ok: false;
-  error?: string;
-  reason?: string;
-  hint?: string;
-}
-
-/**
- * Format activation error message from API response.
- * Includes hint if available for better user guidance.
- */
-export function formatActivationError(data: ActivationErrorResponse): string {
-  const baseError = data.error || data.reason || "Falha ao ativar licença.";
-  if (data.hint) {
-    return `${baseError} — ${data.hint}`;
-  }
-  return baseError;
 }
