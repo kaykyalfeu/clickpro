@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions, isSuperAdmin } from "@/lib/auth";
-import { checkClientLicense, formatLicenseForResponse } from "@/lib/license";
+import { formatLicenseForResponse } from "@/lib/license";
+import { checkClientLicense } from "@/lib/license.server";
 
 // GET /api/license/status - Get license status for current user's client
 export async function GET() {

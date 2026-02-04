@@ -1,5 +1,6 @@
-import { Pool } from "pg";
-import { PrismaPg } from "@prisma/adapter-pg";
+import "server-only";
+import { Pool } from "@neondatabase/serverless";
+import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient } from "@prisma/client";
 
 const globalForPrisma = globalThis as unknown as {
@@ -17,6 +18,9 @@ function resolveDatabaseUrl() {
 }
 
 function createPrismaClient() {
+  if (!process.env.DATABASE_URL) {
+    throw new Error("DATABASE_URL missing");
+  }
   const connectionString = resolveDatabaseUrl();
   if (!connectionString) {
     throw new Error(
@@ -24,7 +28,7 @@ function createPrismaClient() {
     );
   }
   const pool = globalForPrisma.pool || new Pool({ connectionString });
-  const adapter = new PrismaPg(pool);
+  const adapter = new PrismaNeon(pool);
 
   if (process.env.NODE_ENV !== "production") {
     globalForPrisma.pool = pool;
