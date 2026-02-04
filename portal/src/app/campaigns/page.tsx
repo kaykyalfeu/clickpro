@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import ApiConfigCard from "@/components/ApiConfigCard";
 import ContactsEmptyState from "@/components/ContactsEmptyState";
 import DashboardHeader from "@/components/DashboardHeader";
+import { formatActivationError } from "@/lib/license";
 
 interface TemplateItem {
   id: number;
@@ -97,7 +98,7 @@ export default function CampaignsPage() {
       });
       const data = await response.json();
       if (!response.ok || !data.ok) {
-        setActivationError(data.error || data.reason || "Falha ao ativar licença.");
+        setActivationError(formatActivationError(data));
         return;
       }
       const resolvedClientId = data.clientId ?? clientId;
