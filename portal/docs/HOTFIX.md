@@ -46,7 +46,12 @@ Acesse `/api/health/db` para verificar o status da conexão com o banco de dados
 postgresql://USER:PASSWORD@HOST:PORT/DATABASE?sslmode=require
 ```
 
-### Para Supabase (recomendado):
+### Para Supabase (conexão direta):
+```
+postgresql://postgres:[PASSWORD]@db.[PROJECT_REF].supabase.co:5432/postgres?sslmode=require
+```
+
+### Para Supabase (pooler - Transaction mode):
 ```
 postgresql://postgres.[PROJECT_REF]:[PASSWORD]@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require
 ```

@@ -36,9 +36,10 @@ export function normalizeDbUrl(rawUrl: string | undefined) {
   const overrideSslMode = process.env.PG_SSL_MODE;
 
   // Check if this is a Supabase URL (pooler or direct)
-  const isSupabase = url.hostname.includes("supabase.co") || url.hostname.includes("supabase.com");
+  // Using endsWith to prevent subdomain attacks (e.g., evil-supabase.co)
+  const isSupabase = url.hostname.endsWith(".supabase.co") || url.hostname.endsWith(".supabase.com");
   // Check if this is a Neon URL
-  const isNeon = url.hostname.includes("neon.tech");
+  const isNeon = url.hostname.endsWith(".neon.tech");
 
   // Handle SSL mode based on provider and configuration
   if (overrideSslMode) {
