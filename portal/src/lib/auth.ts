@@ -189,7 +189,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account }) {
       // Only handle OAuth providers (Google, GitHub)
       if (account?.provider === "google" || account?.provider === "github") {
         try {
