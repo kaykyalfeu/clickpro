@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import ApiConfigCard from "@/components/ApiConfigCard";
 import DashboardHeader from "@/components/DashboardHeader";
+import { formatActivationError } from "@/lib/license";
 
 interface TemplateItem {
   id: number;
@@ -82,10 +83,7 @@ export default function TemplatesPage() {
       });
       const data = await response.json();
       if (!response.ok || !data.ok) {
-        const errorMsg = data.hint
-          ? `${data.error || data.reason} ${data.hint}`
-          : data.error || data.reason || "Falha ao ativar licença.";
-        setActivationError(errorMsg);
+        setActivationError(formatActivationError(data));
         return;
       }
       const resolvedClientId = data.clientId ?? clientId;
