@@ -2,7 +2,9 @@
 
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
+import Image from "next/image";
 import LicenseStatus from "./LicenseStatus";
+import ThemeToggle from "./ThemeToggle";
 
 export default function DashboardHeader() {
   const { data: session } = useSession();
@@ -13,19 +15,46 @@ export default function DashboardHeader() {
   };
 
   return (
-    <header className="border-b border-slate-800">
+    <header
+      className="border-b"
+      style={{
+        backgroundColor: "var(--bg-elevated)",
+        borderColor: "var(--border)",
+      }}
+    >
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link
             href="/"
             className="flex items-center gap-3 hover:opacity-80 transition-opacity"
           >
-            <div className="w-10 h-10 rounded-xl bg-violet-600 flex items-center justify-center text-lg font-bold text-white shadow-lg shadow-violet-500/30">
-              CP
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold shadow-lg overflow-hidden"
+              style={{
+                backgroundColor: "var(--primary)",
+                color: "var(--primary-contrast)",
+                boxShadow: "0 4px 12px rgba(124, 58, 237, 0.25)",
+              }}
+            >
+              <Image
+                src="/logo.png"
+                alt="ClickPro Logo"
+                width={40}
+                height={40}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                  e.currentTarget.nextElementSibling?.removeAttribute("style");
+                }}
+              />
+              <span style={{ display: "none" }}>CP</span>
             </div>
             <div>
-              <h1 className="text-lg font-bold text-white">ClickPro</h1>
-              <p className="text-xs text-slate-400">Dashboard</p>
+              <h1 className="text-lg font-bold" style={{ color: "var(--text)" }}>
+                ClickPro
+              </h1>
+              <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                Dashboard
+              </p>
             </div>
           </Link>
         </div>
@@ -34,16 +63,23 @@ export default function DashboardHeader() {
           {user && (
             <div className="flex items-center gap-3">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-medium text-white">
+                <p className="text-sm font-medium" style={{ color: "var(--text)" }}>
                   {user.name || user.email}
                 </p>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs" style={{ color: "var(--text-muted)" }}>
                   {user.role === "SUPER_ADMIN" && "Super Admin"}
                   {user.role === "CLIENT_ADMIN" && `Admin - ${user.clientName || "Cliente"}`}
                   {user.role === "CLIENT_USER" && `Usuário - ${user.clientName || "Cliente"}`}
                 </p>
               </div>
-              <div className="w-9 h-9 rounded-full bg-violet-600/30 flex items-center justify-center text-violet-300 text-sm font-medium border border-violet-500/30">
+              <div
+                className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium border"
+                style={{
+                  backgroundColor: "rgba(124, 58, 237, 0.2)",
+                  color: "var(--primary)",
+                  borderColor: "rgba(124, 58, 237, 0.3)",
+                }}
+              >
                 {(user.name || user.email || "U").charAt(0).toUpperCase()}
               </div>
               <LicenseStatus />
@@ -54,50 +90,66 @@ export default function DashboardHeader() {
             {user?.role === "SUPER_ADMIN" && (
               <Link
                 href="/admin"
-                className="text-sm px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 transition-colors"
+                className="text-sm px-3 py-1.5 rounded-lg border transition-colors"
+                style={{
+                  backgroundColor: "rgba(245, 158, 11, 0.15)",
+                  color: "#F59E0B",
+                  borderColor: "rgba(245, 158, 11, 0.3)",
+                }}
               >
                 Admin
               </Link>
             )}
             <Link
               href="/"
-              className="text-sm text-slate-400 hover:text-white transition-colors"
+              className="text-sm transition-colors hover:opacity-80"
+              style={{ color: "var(--text-muted)" }}
             >
               Home
             </Link>
             <Link
               href="/conversations"
-              className="text-sm text-slate-400 hover:text-white transition-colors"
+              className="text-sm transition-colors hover:opacity-80"
+              style={{ color: "var(--text-muted)" }}
             >
               Inbox
             </Link>
             <Link
               href="/credentials"
-              className="text-sm text-slate-400 hover:text-white transition-colors"
+              className="text-sm transition-colors hover:opacity-80"
+              style={{ color: "var(--text-muted)" }}
             >
               Credenciais
             </Link>
             <Link
               href="/templates"
-              className="text-sm text-slate-400 hover:text-white transition-colors"
+              className="text-sm transition-colors hover:opacity-80"
+              style={{ color: "var(--text-muted)" }}
             >
               Templates
             </Link>
             <Link
               href="/campaigns"
-              className="text-sm text-slate-400 hover:text-white transition-colors"
+              className="text-sm transition-colors hover:opacity-80"
+              style={{ color: "var(--text-muted)" }}
             >
               Campanhas
             </Link>
             <Link
               href="/contacts"
-              className="text-sm text-slate-400 hover:text-white transition-colors"
+              className="text-sm transition-colors hover:opacity-80"
+              style={{ color: "var(--text-muted)" }}
             >
               Contatos
             </Link>
+            <ThemeToggle />
             <button
               onClick={handleSignOut}
-              className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-sm hover:bg-slate-700 transition-colors"
+              className="px-4 py-2 rounded-lg text-sm transition-colors"
+              style={{
+                backgroundColor: "var(--surface-2)",
+                color: "var(--text-muted)",
+              }}
             >
               Sair
             </button>

@@ -15,15 +15,17 @@ export default function DashboardPage() {
   const isAdmin = isSuperAdmin || isClientAdmin;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-950">
+    <div className="min-h-screen" style={{ background: "linear-gradient(to bottom, var(--bg), var(--bg-elevated))" }}>
       {/* Header */}
       <DashboardHeader />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-white">Dashboard</h2>
-          <p className="text-slate-400 mt-1">
+          <h2 className="text-2xl font-bold" style={{ color: "var(--text)" }}>
+            Dashboard
+          </h2>
+          <p className="mt-1" style={{ color: "var(--text-muted)" }}>
             {isSuperAdmin
               ? "Visão geral do sistema de licenciamento"
               : "Visão geral da sua conta"}
@@ -32,7 +34,7 @@ export default function DashboardPage() {
 
         {/* KPI Cards */}
         <section className="mb-8">
-          <h3 className="text-lg font-semibold text-white mb-4">
+          <h3 className="text-lg font-semibold mb-4" style={{ color: "var(--text)" }}>
             Métricas Principais
           </h3>
           <KpiCards />
@@ -41,7 +43,7 @@ export default function DashboardPage() {
         {/* License Tools - Only for SUPER_ADMIN and CLIENT_ADMIN */}
         {isAdmin && (
           <section className="mb-8">
-            <h3 className="text-lg font-semibold text-white mb-4">
+            <h3 className="text-lg font-semibold mb-4" style={{ color: "var(--text)" }}>
               Ferramentas de Licença
             </h3>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -58,9 +60,9 @@ export default function DashboardPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-800 mt-auto">
+      <footer className="border-t mt-auto" style={{ borderColor: "var(--border)" }}>
         <div className="max-w-7xl mx-auto px-6 py-4">
-          <p className="text-sm text-slate-500 text-center">
+          <p className="text-sm text-center" style={{ color: "var(--text-muted)" }}>
             &copy; {new Date().getFullYear()} ClickPro Portal. Todos os direitos
             reservados.
           </p>
