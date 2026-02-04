@@ -18,6 +18,9 @@ function resolveDatabaseUrl() {
 }
 
 function createPrismaClient() {
+  if (!process.env.DATABASE_URL) {
+    throw new Error("DATABASE_URL missing");
+  }
   const connectionString = resolveDatabaseUrl();
   if (!connectionString) {
     throw new Error(
