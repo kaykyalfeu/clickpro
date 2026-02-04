@@ -8,7 +8,7 @@
     "start": "prisma migrate deploy && next start",
     "lint": "eslint",
     "test": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/test-contacts-empty-state.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate --schema=./prisma/schema.prisma"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.0",
