@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import ApiConfigCard from "@/components/ApiConfigCard";
 import DashboardHeader from "@/components/DashboardHeader";
 import { getContactsImportError } from "@/lib/contactsImport";
-import { formatActivationError } from "@/lib/license";
+import { formatActivationError } from "@/lib/license.client";
 
 interface PreviewRow {
   name?: string;

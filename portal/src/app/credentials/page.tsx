@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import ApiConfigCard from "@/components/ApiConfigCard";
 import DashboardHeader from "@/components/DashboardHeader";
-import { formatActivationError } from "@/lib/license";
+import { formatActivationError } from "@/lib/license.client";
 
 const defaultBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://clickpro.grupogarciaseguradoras.com.br";
 

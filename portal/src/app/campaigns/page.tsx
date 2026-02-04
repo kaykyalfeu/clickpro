@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import ApiConfigCard from "@/components/ApiConfigCard";
 import ContactsEmptyState from "@/components/ContactsEmptyState";
 import DashboardHeader from "@/components/DashboardHeader";
-import { formatActivationError } from "@/lib/license";
+import { formatActivationError } from "@/lib/license.client";
 
 interface TemplateItem {
   id: number;

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import ApiConfigCard from "@/components/ApiConfigCard";
 import DashboardHeader from "@/components/DashboardHeader";
-import { formatActivationError } from "@/lib/license";
+import { formatActivationError } from "@/lib/license.client";
 
 interface Conversation {
   id: number;
