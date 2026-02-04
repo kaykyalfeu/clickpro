@@ -9,17 +9,13 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient() {
-  const connectionString =
-    process.env.DATABASE_URL ||
-    process.env.POSTGRES_PRISMA_URL ||
-    process.env.POSTGRES_URL ||
-    "";
-
-  if (!connectionString) {
+  if (!process.env.DATABASE_URL) {
     throw new Error(
-      "DATABASE_URL não está configurada. Defina DATABASE_URL (ou POSTGRES_PRISMA_URL/POSTGRES_URL) no ambiente."
+      "DATABASE_URL missing at runtime. Check Vercel Environment Variables (Preview + Production)."
     );
   }
+
+  const connectionString = process.env.DATABASE_URL;
 
   const pool = globalForPrisma.pool || new Pool({ connectionString });
   const adapter = new PrismaPg(pool);
