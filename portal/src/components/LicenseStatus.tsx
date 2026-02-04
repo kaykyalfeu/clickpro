@@ -57,7 +57,14 @@ export default function LicenseStatus({
 
   if (isSuperAdmin) {
     return (
-      <div className="px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-medium">
+      <div
+        className="px-3 py-1.5 rounded-lg border text-xs font-medium"
+        style={{
+          backgroundColor: "rgba(245, 158, 11, 0.15)",
+          color: "#F59E0B",
+          borderColor: "rgba(245, 158, 11, 0.3)",
+        }}
+      >
         Super Admin
       </div>
     );
@@ -69,7 +76,14 @@ export default function LicenseStatus({
 
   if (!license.hasLicense) {
     return (
-      <div className="px-3 py-1.5 rounded-lg bg-red-500/20 text-red-300 border border-red-500/30 text-xs font-medium">
+      <div
+        className="px-3 py-1.5 rounded-lg border text-xs font-medium"
+        style={{
+          backgroundColor: "rgba(239, 68, 68, 0.15)",
+          color: "var(--danger)",
+          borderColor: "rgba(239, 68, 68, 0.3)",
+        }}
+      >
         Sem licenca
       </div>
     );
@@ -77,7 +91,14 @@ export default function LicenseStatus({
 
   if (!license.isValid) {
     return (
-      <div className="px-3 py-1.5 rounded-lg bg-red-500/20 text-red-300 border border-red-500/30 text-xs font-medium">
+      <div
+        className="px-3 py-1.5 rounded-lg border text-xs font-medium"
+        style={{
+          backgroundColor: "rgba(239, 68, 68, 0.15)",
+          color: "var(--danger)",
+          borderColor: "rgba(239, 68, 68, 0.3)",
+        }}
+      >
         Licenca expirada
       </div>
     );
@@ -86,14 +107,28 @@ export default function LicenseStatus({
   // Show warning if license expires soon (< 30 days)
   if (license.daysRemaining <= 30 && license.daysRemaining > 0) {
     return (
-      <div className="px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-medium">
+      <div
+        className="px-3 py-1.5 rounded-lg border text-xs font-medium"
+        style={{
+          backgroundColor: "rgba(245, 158, 11, 0.15)",
+          color: "#F59E0B",
+          borderColor: "rgba(245, 158, 11, 0.3)",
+        }}
+      >
         Licenca expira em {license.daysRemaining} dias
       </div>
     );
   }
 
   return (
-    <div className="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-medium">
+    <div
+      className="px-3 py-1.5 rounded-lg border text-xs font-medium"
+      style={{
+        backgroundColor: "rgba(34, 197, 94, 0.15)",
+        color: "var(--success)",
+        borderColor: "rgba(34, 197, 94, 0.3)",
+      }}
+    >
       {license.plan?.toUpperCase() || "Ativo"}
     </div>
   );
