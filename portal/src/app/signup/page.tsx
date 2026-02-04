@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import PasswordInput from "@/components/PasswordInput";
 
 const steps = [
   {
@@ -255,30 +256,16 @@ export default function SignUpPage() {
                 />
               </div>
 
-              <div>
-                <label className="mb-2 block text-xs text-zinc-400">Senha</label>
-                <div className="relative">
-                  <input
-                    type="password"
-                    placeholder="Digite sua senha"
-                    value={formData.password}
-                    onChange={(event) =>
-                      setFormData((prev) => ({ ...prev, password: event.target.value }))
-                    }
-                    className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 pr-10 text-sm text-white placeholder:text-zinc-600 focus:border-violet-500 focus:outline-none"
-                  />
-                  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-zinc-500">
-                    <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor">
-                      <path
-                        d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"
-                        strokeWidth="1.5"
-                      />
-                      <circle cx="12" cy="12" r="3" strokeWidth="1.5" />
-                    </svg>
-                  </span>
-                </div>
-                <p className="mt-2 text-xs text-zinc-500">Mínimo de 8 caracteres.</p>
-              </div>
+              <PasswordInput
+                label="Senha"
+                placeholder="Digite sua senha"
+                value={formData.password}
+                onChange={(event) =>
+                  setFormData((prev) => ({ ...prev, password: event.target.value }))
+                }
+                helperText="Mínimo de 8 caracteres."
+                variant="dark"
+              />
 
               <button
                 type="submit"
