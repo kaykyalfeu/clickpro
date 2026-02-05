@@ -3,6 +3,7 @@
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import LicenseStatus from "./LicenseStatus";
+import ThemeToggle from "./ThemeToggle";
 
 export default function DashboardHeader() {
   const { data: session } = useSession();
@@ -49,6 +50,8 @@ export default function DashboardHeader() {
               <LicenseStatus />
             </div>
           )}
+
+          <ThemeToggle />
 
           <nav className="flex items-center gap-3">
             {user?.role === "SUPER_ADMIN" && (

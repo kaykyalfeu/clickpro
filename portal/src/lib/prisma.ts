@@ -1,4 +1,5 @@
 import "server-only";
+import * as fs from "fs";
 import { Pool, PoolConfig } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
@@ -9,7 +10,20 @@ import { ensureSupabaseCaCertSync } from "@/lib/ssl-cert";
 // BEFORE any PrismaClient instance is created. This must happen at module
 // load time (cold start) so that when Prisma opens the TLS connection,
 // the certificate is already available.
-ensureSupabaseCaCertSync();
+const caCertPath = ensureSupabaseCaCertSync();
+
+// Read CA certificate once at module initialization for performance.
+// The pg module requires the CA cert to be passed directly in the ssl config,
+// not via PGSSLROOTCERT environment variable (which is for libpq).
+let caCert: string | undefined;
+if (caCertPath) {
+  try {
+    caCert = fs.readFileSync(caCertPath, "utf8");
+    console.log(`[PRISMA] Loaded CA certificate from ${caCertPath}`);
+  } catch (err) {
+    console.warn(`[PRISMA] Failed to read CA certificate from ${caCertPath}:`, err);
+  }
+}
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient;
@@ -27,8 +41,12 @@ function getPoolConfig(connectionString: string): PoolConfig {
 
   // Configure SSL for production environments
   if (process.env.NODE_ENV === "production" || connectionString.includes("supabase")) {
+    const rejectUnauthorized = process.env.PG_SSL_REJECT_UNAUTHORIZED !== "false";
+
     config.ssl = {
-      rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED !== "false",
+      rejectUnauthorized,
+      // Include CA cert if available to validate self-signed certificates
+      ...(caCert && { ca: caCert }),
     };
   }
 
