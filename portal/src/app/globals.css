@@ -262,7 +262,7 @@ body {
   gap: 12px;
 }
 
-.form-panel h4 {
+.form-panel h2 {
   font-size: 20px;
   font-weight: 700;
   color: var(--text-primary);
