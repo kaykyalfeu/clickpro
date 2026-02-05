@@ -270,7 +270,7 @@ export default function AuthCard({ initialView = "signin" }: AuthCardProps) {
             <div className="hero-content signin">
               <Image
                 src="/banner-clickpro.png"
-                alt="Banner ClickPro"
+                alt="Banner ClickPro para login"
                 width={320}
                 height={200}
                 className="auth-banner"
@@ -280,7 +280,7 @@ export default function AuthCard({ initialView = "signin" }: AuthCardProps) {
             <div className="hero-content signup">
               <Image
                 src="/banner-clickpro.png"
-                alt="Banner ClickPro"
+                alt="Banner ClickPro para criar conta"
                 width={320}
                 height={200}
                 className="auth-banner"
