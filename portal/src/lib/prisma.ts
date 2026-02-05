@@ -3,6 +3,13 @@ import { Pool, PoolConfig } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { normalizeDbUrl } from "@/lib/db-url";
+import { ensureSupabaseCaCertSync } from "@/lib/ssl-cert";
+
+// CRITICAL: Ensure CA certificate is written and PGSSLROOTCERT is set
+// BEFORE any PrismaClient instance is created. This must happen at module
+// load time (cold start) so that when Prisma opens the TLS connection,
+// the certificate is already available.
+ensureSupabaseCaCertSync();
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient;

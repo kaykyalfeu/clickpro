@@ -49,10 +49,14 @@ export async function GET() {
         activePath,
         recommendedPath: diagnostics.recommendedPath,
         filePaths: diagnostics.filePaths,
+        // Show PGSSLROOTCERT to verify it's set correctly
+        pgsslrootcert: process.env.PGSSLROOTCERT ?? null,
       },
       recommendation: activePath 
         ? `Certificate active at: ${activePath}`
         : "No certificate found. Set SUPABASE_CA_CERT env var with the certificate content.",
+      // Additional verification for SSL setup
+      sslSetupValid: !!(activePath && process.env.PGSSLROOTCERT === activePath),
     });
   } catch (error) {
     return NextResponse.json({

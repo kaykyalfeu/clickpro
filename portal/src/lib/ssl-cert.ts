@@ -16,6 +16,12 @@ import * as path from "path";
  * 
  * Note: In serverless environments, /tmp is isolated per function invocation
  * and ephemeral, so file permissions provide no additional security benefit.
+ * 
+ * IMPORTANT: For Prisma with SSL verification (sslmode=verify-full), you MUST call
+ * ensureSupabaseCaCertSync() BEFORE instantiating PrismaClient. This ensures:
+ * 1. The CA cert is written to /tmp/supabase-ca.crt
+ * 2. process.env.PGSSLROOTCERT is set to point to that file
+ * 3. Prisma/pg can find and use the CA cert for TLS verification
  */
 
 const TMP_CERT_PATH = "/tmp/supabase-ca.crt";
@@ -36,6 +42,51 @@ function fileExists(filePath: string): boolean {
     return fs.existsSync(filePath);
   } catch {
     return false;
+  }
+}
+
+/**
+ * CRITICAL: Synchronous function to ensure the Supabase CA certificate is available
+ * and set PGSSLROOTCERT environment variable BEFORE PrismaClient is instantiated.
+ * 
+ * This function MUST be called at module load time (not inside an async handler)
+ * to guarantee the certificate is available when Prisma opens the TLS connection.
+ * 
+ * The function:
+ * 1. Checks if cert already exists at /tmp/supabase-ca.crt
+ * 2. If not, reads SUPABASE_CA_CERT env var and writes the cert to /tmp
+ * 3. Sets process.env.PGSSLROOTCERT to the cert path
+ * 
+ * @returns The path to the certificate if successful, null otherwise
+ */
+export function ensureSupabaseCaCertSync(): string | null {
+  // If cert already exists, just set the env var and return
+  if (fileExists(TMP_CERT_PATH)) {
+    process.env.PGSSLROOTCERT = TMP_CERT_PATH;
+    return TMP_CERT_PATH;
+  }
+
+  const raw = process.env.SUPABASE_CA_CERT;
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    // Handle certificates stored with literal "\n" (backslash + n) instead of actual newlines.
+    // This is common when setting env vars in shells or Vercel dashboard.
+    // In JS source: "\\n" is a 2-char string (backslash + n), /\\n/g regex matches it.
+    const cert = raw.includes("\\n") ? raw.replace(/\\n/g, "\n") : raw;
+
+    // Write cert with restricted permissions (defense-in-depth)
+    fs.writeFileSync(TMP_CERT_PATH, cert, { mode: 0o600 });
+
+    // Set PGSSLROOTCERT for libpq/node-pg to use
+    process.env.PGSSLROOTCERT = TMP_CERT_PATH;
+    
+    return TMP_CERT_PATH;
+  } catch (err) {
+    console.error(`[SSL] Failed to write certificate synchronously:`, err);
+    return null;
   }
 }
 
