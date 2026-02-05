@@ -48,6 +48,7 @@ function PasswordField({
           value={value}
           onChange={(event) => onChange(event.target.value)}
           placeholder={placeholder}
+          autoComplete={id.includes("signup") ? "new-password" : "current-password"}
           required
         />
         <button
@@ -306,14 +307,47 @@ export default function AuthCard({ initialView = "signin" }: AuthCardProps) {
         <div className="auth-hero">
           <div className="auth-hero-inner">
             <div className="hero-content signin">
-              <h2>Welcome Back.</h2>
-              <h3>Please enter your credentials.</h3>
-              <Image src="/file.svg" alt="Ilustração de login" width={220} height={140} />
+              <div className="hero-brand">
+                <Image src="/logomarca-click-pro.png" alt="Logomarca ClickPro" width={56} height={56} priority />
+                <div>
+                  <h2>Bem-vindo ao ClickPro</h2>
+                  <h3>Faça login para gerenciar campanhas, contatos e resultados.</h3>
+                </div>
+              </div>
+
+              <Image
+                src="/banner-clickpro.png"
+                alt="Banner ClickPro"
+                width={310}
+                height={170}
+                className="hero-banner"
+                priority
+              />
+
+              <button type="button" className="hero-switch-action" onClick={() => setView("signup")}>
+                Ainda não tem conta? Criar agora
+              </button>
             </div>
             <div className="hero-content signup">
-              <h2>Sign Up Now.</h2>
-              <h3>Join the crowd and get started.</h3>
-              <Image src="/window.svg" alt="Ilustração de cadastro" width={220} height={140} />
+              <div className="hero-brand">
+                <Image src="/logomarca-click-pro.png" alt="Logomarca ClickPro" width={56} height={56} />
+                <div>
+                  <h2>Crie sua conta ClickPro</h2>
+                  <h3>Comece em poucos passos e ganhe velocidade na operação comercial.</h3>
+                </div>
+              </div>
+
+              <Image
+                src="/banner-clickpro.png"
+                alt="Banner de cadastro ClickPro"
+                width={310}
+                height={170}
+                className="hero-banner"
+              />
+
+              <button type="button" className="hero-switch-action" onClick={() => setView("signin")}>
+                Já possui cadastro? Entrar agora
+              </button>
             </div>
           </div>
         </div>
@@ -336,6 +370,7 @@ export default function AuthCard({ initialView = "signin" }: AuthCardProps) {
                 value={signInEmail}
                 onChange={(event) => setSignInEmail(event.target.value)}
                 placeholder="voce@empresa.com"
+                autoComplete="email"
                 required
               />
 
@@ -409,6 +444,7 @@ export default function AuthCard({ initialView = "signin" }: AuthCardProps) {
                 value={signUpName}
                 onChange={(event) => setSignUpName(event.target.value)}
                 placeholder="Seu nome"
+                autoComplete="name"
                 required
               />
 
@@ -422,6 +458,7 @@ export default function AuthCard({ initialView = "signin" }: AuthCardProps) {
                 value={signUpEmail}
                 onChange={(event) => setSignUpEmail(event.target.value)}
                 placeholder="voce@empresa.com"
+                autoComplete="email"
                 required
               />
 
@@ -448,7 +485,7 @@ export default function AuthCard({ initialView = "signin" }: AuthCardProps) {
               />
 
               <button type="submit" className="auth-primary" disabled={signUpLoading}>
-                {signUpLoading ? "Entrando..." : "Entrar"}
+                {signUpLoading ? "Criando conta..." : "Criar conta"}
               </button>
 
               {showOAuth && (

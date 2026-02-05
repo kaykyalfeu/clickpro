@@ -6,13 +6,41 @@ import { useTheme } from "./ThemeProvider";
 type ThemeOption = {
   value: "light" | "dark";
   label: string;
-  icon: string;
 };
 
 const OPTIONS: ThemeOption[] = [
-  { value: "light", label: "Claro", icon: "☀️" },
-  { value: "dark", label: "Escuro", icon: "🌙" },
+  { value: "light", label: "Claro" },
+  { value: "dark", label: "Escuro" },
 ];
+
+function ThemeIcon({ theme }: { theme: "light" | "dark" }) {
+  if (theme === "light") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="theme-icon-svg">
+        <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" strokeWidth="1.8" />
+        <path
+          d="M12 2.5v2.6M12 18.9v2.6M21.5 12h-2.6M5.1 12H2.5M18.7 5.3l-1.8 1.8M7.1 16.9l-1.8 1.8M18.7 18.7l-1.8-1.8M7.1 7.1 5.3 5.3"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="theme-icon-svg">
+      <path
+        d="M20 13.8A8 8 0 1 1 10.2 4a7 7 0 1 0 9.8 9.8Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 export default function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -40,8 +68,6 @@ export default function ThemeToggle() {
     };
   }, []);
 
-  const currentIcon = theme === "dark" ? "🌙" : "☀️";
-
   return (
     <div className="theme-menu" ref={menuRef}>
       <button
@@ -53,8 +79,8 @@ export default function ThemeToggle() {
         aria-expanded={open}
         aria-haspopup="menu"
       >
-        <span className="theme-toggle-emoji" aria-hidden="true">
-          {currentIcon}
+        <span className="theme-toggle-icon" aria-hidden="true">
+          <ThemeIcon theme={theme} />
         </span>
       </button>
 
@@ -75,7 +101,9 @@ export default function ThemeToggle() {
                 }}
                 className={`theme-option ${isActive ? "active" : ""}`}
               >
-                <span aria-hidden="true">{option.icon}</span>
+                <span className="theme-option-icon" aria-hidden="true">
+                  <ThemeIcon theme={option.value} />
+                </span>
                 <span>{option.label}</span>
               </button>
             );
