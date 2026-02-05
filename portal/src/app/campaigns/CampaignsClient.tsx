@@ -354,7 +354,12 @@ export default function CampaignsClient() {
               </p>
               <div className="mt-3 max-h-56 space-y-2 overflow-y-auto rounded-xl border border-slate-800 bg-slate-950 p-3">
                 {contacts.length === 0 && (
-                  <ContactsEmptyState isAuthenticated={sessionStatus === "authenticated"} importHref="/contacts" />
+                  <ContactsEmptyState
+                    isAuthenticated={sessionStatus === "authenticated"}
+                    importHref="/contacts"
+                    canImportContacts
+                    showPermissionMessage={false}
+                  />
                 )}
                 {contacts.map((contact) => (
                   <label

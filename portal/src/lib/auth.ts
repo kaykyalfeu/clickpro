@@ -114,8 +114,9 @@ export const authOptions: NextAuthOptions = {
             throw new Error("Email e senha são obrigatórios");
           }
 
+          const normalizedEmail = credentials.email.toLowerCase().trim();
           const user = await prisma.user.findUnique({
-            where: { email: credentials.email.toLowerCase().trim() },
+            where: { email: normalizedEmail },
             select: {
               id: true,
               email: true,
@@ -137,26 +138,26 @@ export const authOptions: NextAuthOptions = {
           });
 
           if (!user) {
-            console.log(`Login failed: user not found for email ${credentials.email}`);
+            console.log(`[LOGIN_401] reason=user_not_found email=${normalizedEmail} env=${process.env.VERCEL_ENV || "local"}`);
             throw new Error("Usuário não encontrado");
           }
 
           // Check if user has password (OAuth users may not have one)
           if (!user.passwordHash) {
-            console.log(`Login failed: user ${credentials.email} has no password (OAuth account)`);
+            console.log(`[LOGIN_401] reason=oauth_account email=${normalizedEmail} userId=${user.id} env=${process.env.VERCEL_ENV || "local"}`);
             throw new Error("Esta conta usa login social. Use Google ou GitHub para entrar.");
           }
 
           const isValid = verifyPassword(credentials.password, user.passwordHash);
           if (!isValid) {
-            console.log(`Login failed: invalid password for user ${credentials.email}`);
+            console.log(`[LOGIN_401] reason=invalid_password email=${normalizedEmail} userId=${user.id} env=${process.env.VERCEL_ENV || "local"}`);
             throw new Error("Senha incorreta");
           }
 
           // SUPER_ADMIN has no client, CLIENT_ADMIN/CLIENT_USER have a client
           const membership = user.role === "SUPER_ADMIN" ? null : user.memberships?.[0];
 
-          console.log(`Login successful for user ${credentials.email} with role ${user.role}`);
+          console.log(`[LOGIN_OK] email=${normalizedEmail} role=${user.role} env=${process.env.VERCEL_ENV || "local"}`);
 
           return {
             id: user.id,
