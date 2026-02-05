@@ -12,6 +12,17 @@ interface AuthCardProps {
   initialView?: AuthView;
 }
 
+const BannerImage = () => (
+  <Image
+    src="/banner-clickpro.png"
+    alt="Banner ClickPro com automação inteligente"
+    width={320}
+    height={200}
+    className="auth-banner"
+    priority
+  />
+);
+
 function splitName(fullName: string) {
   const trimmed = fullName.trim();
   if (!trimmed) return { firstName: "", lastName: "" };
@@ -70,16 +81,6 @@ export default function AuthCard({ initialView = "signin" }: AuthCardProps) {
   }, [initialView]);
 
   const viewClassName = useMemo(() => `auth-card ${view}`, [view]);
-  const renderBanner = () => (
-    <Image
-      src="/banner-clickpro.png"
-      alt="Banner ClickPro com automação inteligente"
-      width={320}
-      height={200}
-      className="auth-banner"
-      priority
-    />
-  );
 
   async function handleOAuthSignIn(provider: "google" | "github") {
     setOauthLoading(provider);
@@ -278,10 +279,10 @@ export default function AuthCard({ initialView = "signin" }: AuthCardProps) {
         <div className="auth-hero">
           <div className="auth-hero-inner">
             <div className="hero-content signin">
-              {renderBanner()}
+              <BannerImage />
             </div>
             <div className="hero-content signup">
-              {renderBanner()}
+              <BannerImage />
             </div>
           </div>
         </div>
