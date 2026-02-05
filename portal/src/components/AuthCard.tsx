@@ -12,17 +12,6 @@ interface AuthCardProps {
   initialView?: AuthView;
 }
 
-const BannerImage = () => (
-  <Image
-    src="/banner-clickpro.png"
-    alt="Banner ClickPro com automação inteligente"
-    width={320}
-    height={200}
-    className="auth-banner"
-    priority
-  />
-);
-
 function splitName(fullName: string) {
   const trimmed = fullName.trim();
   if (!trimmed) return { firstName: "", lastName: "" };
@@ -289,13 +278,7 @@ export default function AuthCard({ initialView = "signin" }: AuthCardProps) {
         <ul className="auth-nav">
           <li className="active-bar" aria-hidden="true" />
           <li className="auth-logo">
-            <Image
-              src="/logomarca-click-pro.png"
-              alt="ClickPro"
-              width={48}
-              height={48}
-              className="auth-logo-image"
-            />
+            <div className="logo-badge">CP</div>
             <span>ClickPro</span>
           </li>
           <li>
@@ -323,10 +306,14 @@ export default function AuthCard({ initialView = "signin" }: AuthCardProps) {
         <div className="auth-hero">
           <div className="auth-hero-inner">
             <div className="hero-content signin">
-              <BannerImage />
+              <h2>Welcome Back.</h2>
+              <h3>Please enter your credentials.</h3>
+              <Image src="/file.svg" alt="Ilustração de login" width={220} height={140} />
             </div>
             <div className="hero-content signup">
-              <BannerImage />
+              <h2>Sign Up Now.</h2>
+              <h3>Join the crowd and get started.</h3>
+              <Image src="/window.svg" alt="Ilustração de cadastro" width={220} height={140} />
             </div>
           </div>
         </div>
@@ -334,9 +321,7 @@ export default function AuthCard({ initialView = "signin" }: AuthCardProps) {
         <div className="auth-form">
           <div className="auth-forms">
             <form className="form-panel" onSubmit={handleSignIn}>
-              <h2>
-                <span aria-hidden="true">🔐</span> Entrar
-              </h2>
+              <h4>Entrar</h4>
               <p>Use suas credenciais para acessar o portal.</p>
 
               {signInError && <div className="auth-alert">{signInError}</div>}
@@ -409,9 +394,7 @@ export default function AuthCard({ initialView = "signin" }: AuthCardProps) {
             </form>
 
             <form className="form-panel" onSubmit={handleSignUp}>
-              <h2>
-                <span aria-hidden="true">✨</span> Criar conta
-              </h2>
+              <h4>Criar conta</h4>
               <p>Preencha os dados para começar sua experiência.</p>
 
               {signUpError && <div className="auth-alert">{signUpError}</div>}

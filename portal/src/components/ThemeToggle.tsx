@@ -14,7 +14,9 @@ export default function ThemeToggle() {
       title={isDark ? "Alternar para tema claro" : "Alternar para tema escuro"}
       aria-label={isDark ? "Alternar para tema claro" : "Alternar para tema escuro"}
     >
-      <i className={isDark ? "ai-sun" : "ai-moon"} aria-hidden="true" />
+      <span className="theme-toggle-emoji" aria-hidden="true">
+        {isDark ? "☀️" : "🌙"}
+      </span>
     </button>
   );
 }
