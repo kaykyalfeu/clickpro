@@ -19,6 +19,50 @@ function splitName(fullName: string) {
   return { firstName, lastName: rest.join(" ") };
 }
 
+function PasswordField({
+  id,
+  label,
+  value,
+  placeholder,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  placeholder: string;
+  onChange: (value: string) => void;
+}) {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <div>
+      <label className="auth-label" htmlFor={id}>
+        {label}
+      </label>
+      <div className="auth-password-wrap">
+        <input
+          id={id}
+          type={visible ? "text" : "password"}
+          className="auth-input auth-input-password"
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={placeholder}
+          required
+        />
+        <button
+          type="button"
+          className="auth-password-toggle"
+          onClick={() => setVisible((previous) => !previous)}
+          aria-label={visible ? "Ocultar senha" : "Mostrar senha"}
+          title={visible ? "Ocultar senha" : "Mostrar senha"}
+        >
+          {visible ? "🙈" : "👁️"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function AuthCard({ initialView = "signin" }: AuthCardProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -295,28 +339,31 @@ export default function AuthCard({ initialView = "signin" }: AuthCardProps) {
                 required
               />
 
-              <label className="auth-label" htmlFor="signin-password">
-                Senha
-              </label>
-              <input
+              <PasswordField
                 id="signin-password"
-                type="password"
-                className="auth-input"
+                label="Senha"
                 value={signInPassword}
-                onChange={(event) => setSignInPassword(event.target.value)}
                 placeholder="••••••••"
-                required
+                onChange={setSignInPassword}
               />
 
-              <div className="auth-row">
-                <Link href="/forgot-password">Esqueci a senha</Link>
-                <button type="button" className="auth-link" onClick={handleSuperAdminLogin}>
-                  {superAdminLoading ? "Entrando..." : "Acesso super admin"}
-                </button>
+              <div className="auth-inline-link-row">
+                <Link href="/forgot-password" className="auth-inline-link">
+                  Esqueci a senha
+                </Link>
               </div>
 
               <button type="submit" className="auth-primary" disabled={signInLoading}>
                 {signInLoading ? "Entrando..." : "Entrar"}
+              </button>
+
+              <button
+                type="button"
+                className="auth-superadmin-button"
+                onClick={handleSuperAdminLogin}
+                disabled={superAdminLoading}
+              >
+                {superAdminLoading ? "Entrando..." : "Acesso super admin"}
               </button>
 
               {showOAuth && (
@@ -378,34 +425,30 @@ export default function AuthCard({ initialView = "signin" }: AuthCardProps) {
                 required
               />
 
-              <label className="auth-label" htmlFor="signup-password">
-                Senha
-              </label>
-              <input
+              <PasswordField
                 id="signup-password"
-                type="password"
-                className="auth-input"
+                label="Senha"
                 value={signUpPassword}
-                onChange={(event) => setSignUpPassword(event.target.value)}
                 placeholder="Crie uma senha"
-                required
+                onChange={setSignUpPassword}
               />
 
-              <label className="auth-label" htmlFor="signup-confirm">
-                Confirmar senha
-              </label>
-              <input
+              <div className="auth-inline-link-row">
+                <Link href="/forgot-password" className="auth-inline-link">
+                  Esqueci a senha
+                </Link>
+              </div>
+
+              <PasswordField
                 id="signup-confirm"
-                type="password"
-                className="auth-input"
+                label="Confirmar senha"
                 value={signUpConfirm}
-                onChange={(event) => setSignUpConfirm(event.target.value)}
                 placeholder="Repita a senha"
-                required
+                onChange={setSignUpConfirm}
               />
 
               <button type="submit" className="auth-primary" disabled={signUpLoading}>
-                {signUpLoading ? "Cadastrando..." : "Cadastrar"}
+                {signUpLoading ? "Entrando..." : "Entrar"}
               </button>
 
               {showOAuth && (
