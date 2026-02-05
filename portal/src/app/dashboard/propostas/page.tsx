@@ -85,7 +85,7 @@ export default function PropostasPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-950 dark:from-slate-900 dark:to-slate-950">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-950">
       {/* Header */}
       <DashboardHeader />
 
@@ -100,7 +100,7 @@ export default function PropostasPage() {
 
         {/* Enviar Proposta Card */}
         <section className="mb-8">
-          <div className="bg-slate-800/50 dark:bg-slate-800/50 border border-slate-700 dark:border-slate-700 rounded-lg p-6">
+          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
             <h3 className="text-lg font-semibold text-white mb-4">
               Enviar Proposta
             </h3>
@@ -125,7 +125,7 @@ export default function PropostasPage() {
                 </button>
               ) : (
                 <div className="space-y-4">
-                  <div className="bg-slate-700/50 dark:bg-slate-700/50 rounded-lg p-4">
+                  <div className="bg-slate-700/50 rounded-lg p-4">
                     <p className="text-slate-300 text-sm mb-1">
                       Arquivo selecionado:
                     </p>
@@ -180,7 +180,7 @@ export default function PropostasPage() {
         </section>
 
         {/* Info Section */}
-        <section className="bg-slate-800/30 dark:bg-slate-800/30 border border-slate-700 dark:border-slate-700 rounded-lg p-6">
+        <section className="bg-slate-800/30 border border-slate-700 rounded-lg p-6">
           <h4 className="text-white font-medium mb-2">Instruções</h4>
           <ul className="text-slate-400 text-sm space-y-1 list-disc list-inside">
             <li>Formatos aceitos: PDF, JPG, PNG</li>
@@ -191,7 +191,7 @@ export default function PropostasPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-800 dark:border-slate-800 mt-auto">
+      <footer className="border-t border-slate-800 mt-auto">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <p className="text-sm text-slate-500 text-center">
             &copy; {new Date().getFullYear()} ClickPro Portal. Todos os direitos
