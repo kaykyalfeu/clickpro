@@ -270,7 +270,7 @@ export default function AuthCard({ initialView = "signin" }: AuthCardProps) {
             <div className="hero-content signin">
               <Image
                 src="/banner-clickpro.png"
-                alt="Banner ClickPro para login"
+                alt="Banner ClickPro com automação inteligente"
                 width={320}
                 height={200}
                 className="auth-banner"
@@ -280,7 +280,7 @@ export default function AuthCard({ initialView = "signin" }: AuthCardProps) {
             <div className="hero-content signup">
               <Image
                 src="/banner-clickpro.png"
-                alt="Banner ClickPro para criar conta"
+                alt="Banner ClickPro com automação inteligente"
                 width={320}
                 height={200}
                 className="auth-banner"
@@ -293,7 +293,7 @@ export default function AuthCard({ initialView = "signin" }: AuthCardProps) {
         <div className="auth-form">
           <div className="auth-forms">
             <form className="form-panel" onSubmit={handleSignIn}>
-              <h4>
+              <h4 aria-label="Entrar">
                 <span aria-hidden="true">🔐</span> Entrar
               </h4>
               <p>Use suas credenciais para acessar o portal.</p>
@@ -365,7 +365,7 @@ export default function AuthCard({ initialView = "signin" }: AuthCardProps) {
             </form>
 
             <form className="form-panel" onSubmit={handleSignUp}>
-              <h4>
+              <h4 aria-label="Criar conta">
                 <span aria-hidden="true">✨</span> Criar conta
               </h4>
               <p>Preencha os dados para começar sua experiência.</p>
