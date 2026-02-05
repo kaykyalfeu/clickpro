@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { getProviders, signIn } from "next-auth/react";
 import PasswordInput from "@/components/PasswordInput";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const steps = [
   {
@@ -38,6 +39,31 @@ export default function SignUpPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<"google" | "github" | null>(null);
+  const [availableProviders, setAvailableProviders] = useState({
+    google: false,
+    github: false,
+  });
+
+  const showOAuth = availableProviders.google || availableProviders.github;
+
+  useEffect(() => {
+    let isMounted = true;
+    getProviders()
+      .then((providers) => {
+        if (!isMounted) return;
+        setAvailableProviders({
+          google: Boolean(providers?.google),
+          github: Boolean(providers?.github),
+        });
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setAvailableProviders({ google: false, github: false });
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleOAuthSignIn = async (provider: "google" | "github") => {
     setOauthLoading(provider);
@@ -92,8 +118,14 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans">
+    <div
+      className="min-h-screen font-sans"
+      style={{ background: "var(--background)", color: "var(--foreground)" }}
+    >
       <div className="mx-auto flex min-h-screen max-w-6xl flex-col gap-8 px-6 py-10 lg:flex-row lg:items-stretch lg:gap-0">
+        <div className="flex w-full justify-end lg:hidden">
+          <ThemeToggle />
+        </div>
         <section className="relative flex w-full flex-col justify-between rounded-3xl bg-gradient-to-b from-[#7c3aed] via-[#4c1d95] to-black px-10 py-12 lg:w-1/2">
           <div>
             <div className="flex items-center gap-3">
@@ -155,60 +187,77 @@ export default function SignUpPage() {
 
         <section className="flex w-full flex-col justify-center rounded-3xl bg-black px-10 py-12 lg:w-1/2 lg:px-12">
           <div className="max-w-md">
+            <div className="hidden justify-end lg:flex">
+              <ThemeToggle />
+            </div>
             <h2 className="text-3xl font-semibold">Criar Conta</h2>
             <p className="mt-2 text-sm text-zinc-400">
               Preencha seus dados para começar a usar o ClickPro.
             </p>
 
-            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <button
-                type="button"
-                onClick={() => handleOAuthSignIn("google")}
-                disabled={oauthLoading !== null || loading}
-                className="flex items-center justify-center gap-2 rounded-xl border border-zinc-800 px-4 py-3 text-sm font-medium transition hover:bg-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {oauthLoading === "google" ? (
-                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                ) : (
-                  <svg
-                    aria-hidden
-                    viewBox="0 0 24 24"
-                    className="h-4 w-4"
-                    fill="currentColor"
-                  >
-                    <path d="M21.35 11.1h-9.18v2.98h5.31c-.23 1.28-1.42 3.75-5.31 3.75-3.2 0-5.81-2.64-5.81-5.88s2.61-5.88 5.81-5.88c1.82 0 3.05.78 3.75 1.45l2.56-2.47C16.99 3.6 14.84 2.4 12.17 2.4 7.4 2.4 3.55 6.29 3.55 11.1s3.85 8.7 8.62 8.7c4.97 0 8.26-3.54 8.26-8.53 0-.57-.08-1.01-.18-1.44Z" />
-                  </svg>
-                )}
-                {oauthLoading === "google" ? "Conectando..." : "Google"}
-              </button>
-              <button
-                type="button"
-                onClick={() => handleOAuthSignIn("github")}
-                disabled={oauthLoading !== null || loading}
-                className="flex items-center justify-center gap-2 rounded-xl border border-zinc-800 px-4 py-3 text-sm font-medium transition hover:bg-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {oauthLoading === "github" ? (
-                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                ) : (
-                  <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
-                    <path d="M12 2.5C6.75 2.5 2.5 6.74 2.5 11.95c0 4.17 2.73 7.69 6.52 8.94.48.09.65-.21.65-.47 0-.23-.01-.84-.02-1.64-2.65.58-3.21-1.29-3.21-1.29-.43-1.1-1.05-1.39-1.05-1.39-.86-.6.07-.59.07-.59.95.07 1.45 1 1.45 1 .85 1.47 2.24 1.04 2.78.8.09-.62.33-1.04.6-1.28-2.11-.24-4.33-1.07-4.33-4.74 0-1.05.37-1.9 1-2.57-.1-.24-.44-1.2.1-2.5 0 0 .82-.26 2.7.98a9.15 9.15 0 0 1 2.46-.34c.84 0 1.68.12 2.46.34 1.88-1.24 2.7-.98 2.7-.98.54 1.3.2 2.26.1 2.5.62.67 1 1.52 1 2.57 0 3.68-2.22 4.5-4.34 4.73.34.3.65.9.65 1.82 0 1.31-.02 2.37-.02 2.69 0 .26.17.57.66.47 3.78-1.25 6.51-4.77 6.51-8.94 0-5.21-4.25-9.45-9.5-9.45Z" />
-                  </svg>
-                )}
-                {oauthLoading === "github" ? "Conectando..." : "GitHub"}
-              </button>
-            </div>
+            {showOAuth && (
+              <>
+                <div
+                  className={`mt-8 grid grid-cols-1 gap-4 ${
+                    availableProviders.google && availableProviders.github
+                      ? "sm:grid-cols-2"
+                      : "sm:grid-cols-1"
+                  }`}
+                >
+                  {availableProviders.google && (
+                    <button
+                      type="button"
+                      onClick={() => handleOAuthSignIn("google")}
+                      disabled={oauthLoading !== null || loading}
+                      className="flex items-center justify-center gap-2 rounded-xl border border-zinc-800 px-4 py-3 text-sm font-medium transition hover:bg-zinc-900 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {oauthLoading === "google" ? (
+                        <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                      ) : (
+                        <svg
+                          aria-hidden
+                          viewBox="0 0 24 24"
+                          className="h-4 w-4"
+                          fill="currentColor"
+                        >
+                          <path d="M21.35 11.1h-9.18v2.98h5.31c-.23 1.28-1.42 3.75-5.31 3.75-3.2 0-5.81-2.64-5.81-5.88s2.61-5.88 5.81-5.88c1.82 0 3.05.78 3.75 1.45l2.56-2.47C16.99 3.6 14.84 2.4 12.17 2.4 7.4 2.4 3.55 6.29 3.55 11.1s3.85 8.7 8.62 8.7c4.97 0 8.26-3.54 8.26-8.53 0-.57-.08-1.01-.18-1.44Z" />
+                        </svg>
+                      )}
+                      {oauthLoading === "google" ? "Conectando..." : "Google"}
+                    </button>
+                  )}
+                  {availableProviders.github && (
+                    <button
+                      type="button"
+                      onClick={() => handleOAuthSignIn("github")}
+                      disabled={oauthLoading !== null || loading}
+                      className="flex items-center justify-center gap-2 rounded-xl border border-zinc-800 px-4 py-3 text-sm font-medium transition hover:bg-zinc-900 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {oauthLoading === "github" ? (
+                        <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                      ) : (
+                        <svg aria-hidden viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
+                          <path d="M12 2.5C6.75 2.5 2.5 6.74 2.5 11.95c0 4.17 2.73 7.69 6.52 8.94.48.09.65-.21.65-.47 0-.23-.01-.84-.02-1.64-2.65.58-3.21-1.29-3.21-1.29-.43-1.1-1.05-1.39-1.05-1.39-.86-.6.07-.59.07-.59.95.07 1.45 1 1.45 1 .85 1.47 2.24 1.04 2.78.8.09-.62.33-1.04.6-1.28-2.11-.24-4.33-1.07-4.33-4.74 0-1.05.37-1.9 1-2.57-.1-.24-.44-1.2.1-2.5 0 0 .82-.26 2.7.98a9.15 9.15 0 0 1 2.46-.34c.84 0 1.68.12 2.46.34 1.88-1.24 2.7-.98 2.7-.98.54 1.3.2 2.26.1 2.5.62.67 1 1.52 1 2.57 0 3.68-2.22 4.5-4.34 4.73.34.3.65.9.65 1.82 0 1.31-.02 2.37-.02 2.69 0 .26.17.57.66.47 3.78-1.25 6.51-4.77 6.51-8.94 0-5.21-4.25-9.45-9.5-9.45Z" />
+                        </svg>
+                      )}
+                      {oauthLoading === "github" ? "Conectando..." : "GitHub"}
+                    </button>
+                  )}
+                </div>
 
-            <div className="my-6 flex items-center gap-3 text-xs text-zinc-500">
-              <span className="h-px flex-1 bg-zinc-800" />
-              Ou
-              <span className="h-px flex-1 bg-zinc-800" />
-            </div>
+                <div className="my-6 flex items-center gap-3 text-xs text-zinc-500">
+                  <span className="h-px flex-1 bg-zinc-800" />
+                  Ou
+                  <span className="h-px flex-1 bg-zinc-800" />
+                </div>
+              </>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
