@@ -140,6 +140,14 @@ export async function POST(request: Request) {
       message: (error as { message?: string } | null)?.message,
     });
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      // P1011: TLS connection error (e.g., self-signed certificate in chain)
+      if (error.code === "P1011") {
+        console.error("[SIGNUP] TLS connection error. Check SSL configuration (PG_SSL_REJECT_UNAUTHORIZED, SUPABASE_CA_CERT).");
+        return NextResponse.json(
+          { error: "Erro de conexão segura com o banco de dados. Entre em contato com o suporte." },
+          { status: 503 }
+        );
+      }
       if (error.code === "P2021") {
         return NextResponse.json(
           { error: "Banco não inicializado. Execute as migrations do Prisma antes de cadastrar usuários." },

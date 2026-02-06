@@ -41,13 +41,45 @@ function getPoolConfig(connectionString: string): PoolConfig {
 
   // Configure SSL for production environments
   if (process.env.NODE_ENV === "production" || connectionString.includes("supabase")) {
-    const rejectUnauthorized = process.env.PG_SSL_REJECT_UNAUTHORIZED !== "false";
+    // Parse sslmode from connection string to correctly map to pg's ssl options.
+    // PostgreSQL sslmode semantics:
+    //   require     → encrypt, but do NOT verify server certificate
+    //   verify-ca   → encrypt + verify cert is signed by trusted CA
+    //   verify-full → encrypt + verify cert + verify hostname
+    // node-postgres (pg) equivalent:
+    //   rejectUnauthorized: false → sslmode=require
+    //   rejectUnauthorized: true  → sslmode=verify-ca / verify-full
+    let sslmode = "require";
+    try {
+      const url = new URL(connectionString);
+      sslmode = url.searchParams.get("sslmode") || "require";
+    } catch {
+      // URL parsing failed, keep default
+    }
+
+    const envOverride = process.env.PG_SSL_REJECT_UNAUTHORIZED;
+    let rejectUnauthorized: boolean;
+
+    if (envOverride !== undefined) {
+      // Explicit env override always takes precedence
+      rejectUnauthorized = envOverride !== "false";
+    } else if (sslmode === "verify-ca" || sslmode === "verify-full") {
+      // Verification modes require cert validation
+      rejectUnauthorized = true;
+    } else {
+      // sslmode=require (default for Supabase/Neon/Railway):
+      // encrypt the connection but do NOT verify the server certificate.
+      // This matches PostgreSQL's sslmode=require semantics exactly.
+      rejectUnauthorized = false;
+    }
 
     config.ssl = {
       rejectUnauthorized,
-      // Include CA cert if available to validate self-signed certificates
+      // Include CA cert if available (enables verification even with require)
       ...(caCert && { ca: caCert }),
     };
+
+    console.log(`[PRISMA] SSL config: sslmode=${sslmode}, rejectUnauthorized=${rejectUnauthorized}, caCert=${caCert ? "loaded" : "none"}`);
   }
 
   return config;
