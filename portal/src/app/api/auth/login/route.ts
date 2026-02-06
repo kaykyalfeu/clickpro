@@ -203,8 +203,8 @@ export async function POST(request: Request) {
       message: (error as { message?: string } | null)?.message,
     });
 
-    // Check for Prisma database connection errors
-    const dbConnectionErrors = ["P1000", "P1001", "P1002", "P1003"];
+    // Check for Prisma database connection errors (including P1011 TLS errors)
+    const dbConnectionErrors = ["P1000", "P1001", "P1002", "P1003", "P1011"];
     if (
       error &&
       typeof error === "object" &&
