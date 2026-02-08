@@ -53,9 +53,15 @@ export async function GET(req: Request) {
             },
           }
         : undefined,
-      include: {
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        createdAt: true,
         memberships: {
-          include: {
+          select: {
+            role: true,
             client: {
               select: { id: true, name: true, slug: true },
             },
@@ -136,6 +142,7 @@ export async function POST(req: Request) {
     // Check if email already exists
     const existingUser = await prisma.user.findUnique({
       where: { email: email.toLowerCase().trim() },
+      select: { id: true },
     });
 
     if (existingUser) {
@@ -196,6 +203,7 @@ export async function POST(req: Request) {
           passwordHash: hashPassword(userPassword),
           role: userRole,
         },
+        select: { id: true, email: true, name: true, role: true },
       });
 
       // Create membership if clientId provided

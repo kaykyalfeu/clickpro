@@ -208,10 +208,16 @@ export const authOptions: NextAuthOptions = {
           // Check if user already exists by email
           const existingUser = await prisma.user.findUnique({
             where: { email },
-            include: {
+            select: {
+              id: true,
+              googleId: true,
+              githubId: true,
               memberships: {
                 take: 1,
-                include: { client: true },
+                select: {
+                  clientId: true,
+                  client: { select: { id: true, name: true } },
+                },
               },
             },
           });
@@ -227,8 +233,8 @@ export const authOptions: NextAuthOptions = {
                 where: { id: existingUser.id },
                 data: {
                   [providerIdField]: providerId,
-                  image: user.image ?? existingUser.image,
                 },
+                select: { id: true },
               });
               console.log(`OAuth: Linked ${account.provider} to existing user ${email}`);
             }
@@ -253,10 +259,10 @@ export const authOptions: NextAuthOptions = {
                 data: {
                   email,
                   name: userName,
-                  image: user.image,
                   [providerIdField]: providerId,
                   role: "CLIENT_ADMIN",
                 },
+                select: { id: true },
               });
 
               // Create membership linking user to client
@@ -289,10 +295,19 @@ export const authOptions: NextAuthOptions = {
         if (email) {
           const dbUser = await prisma.user.findUnique({
             where: { email },
-            include: {
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              role: true,
               memberships: {
                 take: 1,
-                include: { client: true },
+                select: {
+                  clientId: true,
+                  client: {
+                    select: { name: true },
+                  },
+                },
               },
             },
           });

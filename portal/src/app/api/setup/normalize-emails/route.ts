@@ -64,6 +64,7 @@ export async function POST(req: Request) {
       await prisma.user.update({
         where: { id: user.id },
         data: { email: normalizedEmail },
+        select: { id: true },
       });
       updated.push(`${user.email} -> ${normalizedEmail}`);
     }

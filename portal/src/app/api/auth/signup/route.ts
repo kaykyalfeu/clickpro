@@ -61,6 +61,7 @@ export async function POST(request: Request) {
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email },
+      select: { id: true },
     });
 
     if (existingUser) {
@@ -105,6 +106,7 @@ export async function POST(request: Request) {
           passwordHash,
           role: "CLIENT_USER",
         },
+        select: { id: true, email: true, name: true },
       });
 
       // Create the membership linking user to client
