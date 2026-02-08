@@ -134,10 +134,12 @@ export function ensureSslCert(): string | null {
   const certContent = process.env.SUPABASE_CA_CERT;
   if (certContent) {
     try {
+      const normalizedCert = certContent.includes("\\n") ? certContent.replace(/\\n/g, "\n") : certContent;
       // Write cert content to /tmp (always writable in serverless)
       // Setting mode 0600 for defense-in-depth, though permissions are less
       // relevant in serverless /tmp which is isolated per function invocation
-      fs.writeFileSync(TMP_CERT_PATH, certContent, { mode: 0o600 });
+      fs.writeFileSync(TMP_CERT_PATH, normalizedCert, { mode: 0o600 });
+      process.env.PGSSLROOTCERT = TMP_CERT_PATH;
       console.log(`[SSL] Certificate written to ${TMP_CERT_PATH} from SUPABASE_CA_CERT env var`);
       return TMP_CERT_PATH;
     } catch (err) {

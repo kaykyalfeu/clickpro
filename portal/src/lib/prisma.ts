@@ -11,17 +11,23 @@ import { ensureSupabaseCaCertSync } from "@/lib/ssl-cert";
 // load time (cold start) so that when Prisma opens the TLS connection,
 // the certificate is already available.
 const caCertPath = ensureSupabaseCaCertSync();
+const envCertPath = process.env.PGSSLROOTCERT;
+const resolvedCertPath = caCertPath ?? (envCertPath && fs.existsSync(envCertPath) ? envCertPath : null);
+
+if (!resolvedCertPath && envCertPath) {
+  console.warn(`[PRISMA] PGSSLROOTCERT is set to ${envCertPath}, but the file was not found.`);
+}
 
 // Read CA certificate once at module initialization for performance.
 // The pg module requires the CA cert to be passed directly in the ssl config,
 // not via PGSSLROOTCERT environment variable (which is for libpq).
 let caCert: string | undefined;
-if (caCertPath) {
+if (resolvedCertPath) {
   try {
-    caCert = fs.readFileSync(caCertPath, "utf8");
-    console.log(`[PRISMA] Loaded CA certificate from ${caCertPath}`);
+    caCert = fs.readFileSync(resolvedCertPath, "utf8");
+    console.log(`[PRISMA] Loaded CA certificate from ${resolvedCertPath}`);
   } catch (err) {
-    console.warn(`[PRISMA] Failed to read CA certificate from ${caCertPath}:`, err);
+    console.warn(`[PRISMA] Failed to read CA certificate from ${resolvedCertPath}:`, err);
   }
 }
 
@@ -70,6 +76,13 @@ function getPoolConfig(connectionString: string): PoolConfig {
       // sslmode=require (default for Supabase/Neon/Railway):
       // encrypt the connection but do NOT verify the server certificate.
       // This matches PostgreSQL's sslmode=require semantics exactly.
+      rejectUnauthorized = false;
+    }
+
+    if (rejectUnauthorized && !caCert) {
+      console.warn(
+        `[PRISMA] sslmode=${sslmode} requires a CA certificate, but none was loaded. Falling back to sslmode=require behavior.`,
+      );
       rejectUnauthorized = false;
     }
 
