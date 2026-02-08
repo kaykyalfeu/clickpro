@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/test-contacts-empty-state.ts",
     "postinstall": "prisma generate --schema=./prisma/schema.prisma",
-    "build:ci": "DATABASE_URL=postgresql://user:pass@localhost:5432/clickpro?sslmode=disable next build"
+    "build:ci": "DATABASE_URL=postgresql://user:pass@localhost:5432/clickpro?sslmode=disable next build",
+    "migrate": "prisma migrate deploy"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.3.0",
