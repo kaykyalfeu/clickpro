@@ -69,6 +69,20 @@ export function normalizeDbUrl(rawUrl: string | undefined) {
     }
   }
 
+  // Suppress pg-connection-string deprecation warning for non-verify-full modes.
+  // pg-connection-string v2.x treats 'require', 'prefer', and 'verify-ca' as
+  // aliases for 'verify-full'. Adding uselibpqcompat=true tells it to use
+  // standard libpq semantics instead. Our prisma.ts already implements the
+  // correct SSL behavior for each mode via explicit pool ssl options.
+  const currentSslMode = params.get("sslmode");
+  if (
+    currentSslMode &&
+    ["require", "prefer", "verify-ca"].includes(currentSslMode) &&
+    !params.has("uselibpqcompat")
+  ) {
+    params.set("uselibpqcompat", "true");
+  }
+
   // Handle SSL root certificate path for verify-full/verify-ca modes
   const sslMode = params.get("sslmode");
   if (sslMode === "verify-full" || sslMode === "verify-ca") {
