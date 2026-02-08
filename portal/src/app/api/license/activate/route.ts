@@ -129,11 +129,11 @@ export async function POST(req: Request) {
       );
     }
 
-    const secret = process.env.JWT_SECRET;
+    const secret = process.env.LICENSE_SIGNING_SECRET;
     if (!secret) {
-      console.error("License activation failed: missing JWT_SECRET");
+      console.error("License activation failed: missing LICENSE_SIGNING_SECRET");
       return NextResponse.json(
-        { ok: false, reason: "MISSING_JWT_SECRET", error: "JWT_SECRET não configurado" },
+        { ok: false, reason: "MISSING_LICENSE_SIGNING_SECRET", error: "LICENSE_SIGNING_SECRET não configurado" },
         { status: 500 }
       );
     }
