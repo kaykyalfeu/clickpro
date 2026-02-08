@@ -50,9 +50,17 @@ export async function GET(req: Request, { params }: RouteParams) {
 
     const user = await prisma.user.findUnique({
       where: { id },
-      include: {
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
         memberships: {
-          include: {
+          select: {
+            id: true,
+            role: true,
             client: {
               select: { id: true, name: true, slug: true },
             },
@@ -125,8 +133,12 @@ export async function PATCH(req: Request, { params }: RouteParams) {
 
     const existing = await prisma.user.findUnique({
       where: { id },
-      include: {
-        memberships: true,
+      select: {
+        id: true,
+        role: true,
+        memberships: {
+          select: { id: true, clientId: true },
+        },
       },
     });
 
@@ -196,6 +208,7 @@ export async function PATCH(req: Request, { params }: RouteParams) {
       const user = await tx.user.update({
         where: { id },
         data: updateData,
+        select: { id: true, email: true, name: true, role: true },
       });
 
       if (addToClient && targetClient) {
@@ -300,6 +313,7 @@ export async function DELETE(req: Request, { params }: RouteParams) {
 
     const user = await prisma.user.findUnique({
       where: { id },
+      select: { id: true },
     });
 
     if (!user) {
@@ -316,6 +330,7 @@ export async function DELETE(req: Request, { params }: RouteParams) {
       }),
       prisma.user.delete({
         where: { id },
+        select: { id: true },
       }),
     ]);
 
