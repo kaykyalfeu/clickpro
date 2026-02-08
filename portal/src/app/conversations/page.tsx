@@ -62,6 +62,8 @@ export default function ConversationsPage() {
     if (storedJwt) setToken(storedJwt);
   }, []);
 
+  const [feedback, setFeedback] = useState("");
+
   function saveConfig() {
     localStorage.setItem("clickpro-config", JSON.stringify({
       baseUrl,
@@ -70,6 +72,8 @@ export default function ConversationsPage() {
       licenseKey,
     }));
     if (token) localStorage.setItem("CLICKPRO_JWT", token);
+    setFeedback("Configurações salvas localmente.");
+    setTimeout(() => setFeedback(""), 3000);
   }
 
   async function activateLicense() {
@@ -240,6 +244,12 @@ export default function ConversationsPage() {
       </div>
 
       <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-6 py-8 lg:grid-cols-[320px_1fr]">
+        {feedback && (
+          <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200 lg:col-span-2">
+            {feedback}
+          </div>
+        )}
+
         <section className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
           <h2 className="text-lg font-semibold mb-4" title="Lista de todas as conversas com seus contatos">Conversas</h2>
           <div className="mb-4">
@@ -399,7 +409,7 @@ export default function ConversationsPage() {
               className="mt-3 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-black hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
               title={!selectedPhone ? "Selecione um contato primeiro" : !outboundMessage.trim() ? "Digite uma mensagem" : "Clique para enviar a mensagem"}
             >
-              Enviar mensagem
+              {loading ? "Enviando..." : "Enviar mensagem"}
             </button>
           </div>
         </section>

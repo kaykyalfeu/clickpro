@@ -29,6 +29,10 @@ export default function CredentialsPage() {
   const [showMetaToken, setShowMetaToken] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [savingOpenai, setSavingOpenai] = useState(false);
+  const [savingWhatsapp, setSavingWhatsapp] = useState(false);
+  const [savingLimits, setSavingLimits] = useState(false);
+  const [fetchingTier, setFetchingTier] = useState(false);
 
   useEffect(() => {
     const storedJwt = localStorage.getItem("CLICKPRO_JWT");
@@ -115,6 +119,7 @@ export default function CredentialsPage() {
   async function saveOpenAi() {
     setFeedback(null);
     setError(null);
+    setSavingOpenai(true);
     try {
       const response = await fetch(`${baseUrl}/api/clients/${clientId}/credentials/openai`, {
         method: "POST",
@@ -134,12 +139,15 @@ export default function CredentialsPage() {
       fetchStatus();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao salvar OpenAI.");
+    } finally {
+      setSavingOpenai(false);
     }
   }
 
   async function saveWhatsApp() {
     setFeedback(null);
     setError(null);
+    setSavingWhatsapp(true);
     try {
       const response = await fetch(`${baseUrl}/api/clients/${clientId}/credentials/whatsapp`, {
         method: "POST",
@@ -160,12 +168,15 @@ export default function CredentialsPage() {
       fetchStatus();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao salvar WhatsApp.");
+    } finally {
+      setSavingWhatsapp(false);
     }
   }
 
   async function saveLimits() {
     setFeedback(null);
     setError(null);
+    setSavingLimits(true);
     try {
       const response = await fetch(`${baseUrl}/api/clients/${clientId}/limits`, {
         method: "POST",
@@ -183,12 +194,15 @@ export default function CredentialsPage() {
       setFeedback("Limites atualizados com sucesso.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao atualizar limites.");
+    } finally {
+      setSavingLimits(false);
     }
   }
 
   async function fetchMetaTier() {
     setFeedback(null);
     setError(null);
+    setFetchingTier(true);
     try {
       const response = await fetch(`${baseUrl}/api/clients/${clientId}/meta/tiers`, {
         method: "POST",
@@ -204,6 +218,8 @@ export default function CredentialsPage() {
       setFeedback(`Tier Meta atualizado: ${data.tier}.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao buscar tier.");
+    } finally {
+      setFetchingTier(false);
     }
   }
 
@@ -238,6 +254,16 @@ export default function CredentialsPage() {
       </div>
 
       <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-6 py-8 lg:grid-cols-2">
+        {(feedback || error) && (
+          <div className={`rounded-2xl border px-4 py-3 text-sm lg:col-span-2 ${
+            error
+              ? "border-red-500/40 bg-red-500/10 text-red-300"
+              : "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
+          }`}>
+            {error || feedback}
+          </div>
+        )}
+
         {/* Instruções iniciais com legendas */}
         <section className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 lg:col-span-2">
           <h2 className="text-lg font-semibold mb-2" title="Passos necessários para começar a usar o ClickPro">Primeiros Passos</h2>
@@ -336,10 +362,11 @@ export default function CredentialsPage() {
             <button
               type="button"
               onClick={saveOpenAi}
-              className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-black hover:bg-slate-200"
+              disabled={savingOpenai}
+              className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-black hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
               title="Salvar e validar credenciais da OpenAI"
             >
-              Salvar OpenAI
+              {savingOpenai ? "Salvando..." : "Salvar OpenAI"}
             </button>
           </div>
         </section>
@@ -410,18 +437,20 @@ export default function CredentialsPage() {
             <button
               type="button"
               onClick={saveWhatsApp}
-              className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-black hover:bg-slate-200"
+              disabled={savingWhatsapp}
+              className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-black hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
               title="Salvar e validar credenciais do WhatsApp"
             >
-              Salvar WhatsApp
+              {savingWhatsapp ? "Salvando..." : "Salvar WhatsApp"}
             </button>
             <button
               type="button"
               onClick={fetchMetaTier}
-              className="rounded-xl border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:bg-slate-800"
+              disabled={fetchingTier}
+              className="rounded-xl border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
               title="Buscar automaticamente o tier de mensagens da sua conta Meta"
             >
-              Buscar tier automaticamente
+              {fetchingTier ? "Buscando..." : "Buscar tier automaticamente"}
             </button>
           </div>
         </section>
@@ -458,22 +487,14 @@ export default function CredentialsPage() {
           <button
             type="button"
             onClick={saveLimits}
-            className="mt-4 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-black hover:bg-slate-200"
+            disabled={savingLimits}
+            className="mt-4 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-black hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
             title="Salvar os limites configurados"
           >
-            Atualizar limites
+            {savingLimits ? "Atualizando..." : "Atualizar limites"}
           </button>
         </section>
 
-        {(feedback || error) && (
-          <div className={`rounded-2xl border px-4 py-3 text-sm lg:col-span-2 ${
-            error
-              ? "border-red-500/40 bg-red-500/10 text-red-300"
-              : "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
-          }`}>
-            {error || feedback}
-          </div>
-        )}
       </main>
     </div>
   );

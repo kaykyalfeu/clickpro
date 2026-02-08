@@ -52,6 +52,7 @@ export default function CampaignsClient() {
   const [search, setSearch] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     const storedJwt = localStorage.getItem("CLICKPRO_JWT");
@@ -177,6 +178,7 @@ export default function CampaignsClient() {
   async function createCampaign() {
     setFeedback(null);
     setError(null);
+    setCreating(true);
     try {
       const response = await fetch(`${baseUrl}/api/clients/${clientId}/campaigns`, {
         method: "POST",
@@ -199,6 +201,8 @@ export default function CampaignsClient() {
       fetchCampaigns();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao criar campanha.");
+    } finally {
+      setCreating(false);
     }
   }
 
@@ -241,6 +245,16 @@ export default function CampaignsClient() {
       </div>
 
       <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-6 py-8 lg:grid-cols-[1.2fr_1fr]">
+        {(feedback || error) && (
+          <div
+            className={`rounded-2xl border px-4 py-3 text-sm lg:col-span-2 ${
+              error ? "border-red-500/40 bg-red-500/10 text-red-300" : "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
+            }`}
+          >
+            {error || feedback}
+          </div>
+        )}
+
         {/* Checklist para criar campanha */}
         <section className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 lg:col-span-2">
           <h2 className="mb-2 text-lg font-semibold" title="Área para criar campanhas e enviar mensagens em massa">
@@ -381,11 +395,11 @@ export default function CampaignsClient() {
             <button
               type="button"
               onClick={createCampaign}
-              disabled={!name || !templateId || selectedContacts.length === 0}
+              disabled={creating || !name || !templateId || selectedContacts.length === 0}
               className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-black hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
               title={!name || !templateId || selectedContacts.length === 0 ? "Preencha todos os campos para criar" : "Criar e agendar a campanha"}
             >
-              Criar campanha
+              {creating ? "Criando..." : "Criar campanha"}
             </button>
           </div>
         </section>
@@ -458,15 +472,6 @@ export default function CampaignsClient() {
           </div>
         </section>
 
-        {(feedback || error) && (
-          <div
-            className={`rounded-2xl border px-4 py-3 text-sm lg:col-span-2 ${
-              error ? "border-red-500/40 bg-red-500/10 text-red-300" : "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
-            }`}
-          >
-            {error || feedback}
-          </div>
-        )}
       </main>
     </div>
   );
