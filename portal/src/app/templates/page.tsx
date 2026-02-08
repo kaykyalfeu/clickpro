@@ -227,6 +227,16 @@ export default function TemplatesPage() {
       </div>
 
       <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-6 py-8 lg:grid-cols-[1.1fr_1fr]">
+        {(feedback || error) && (
+          <div className={`rounded-2xl border px-4 py-3 text-sm lg:col-span-2 ${
+            error
+              ? "border-red-500/40 bg-red-500/10 text-red-300"
+              : "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
+          }`}>
+            {error || feedback}
+          </div>
+        )}
+
         {/* Instruções iniciais */}
         <section className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 lg:col-span-2">
           <h2 className="text-lg font-semibold mb-2" title="Crie modelos prontos de mensagem para campanhas">Crie um template de mensagem</h2>
@@ -348,10 +358,10 @@ export default function TemplatesPage() {
               type="button"
               onClick={handleCreateTemplate}
               disabled={loading}
-              className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-black hover:bg-slate-200 disabled:opacity-50"
+              className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-black hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
               title="Criar o template e enviar para aprovação se marcado"
             >
-              Criar template
+              {loading ? "Criando..." : "Criar template"}
             </button>
           </div>
         </section>
@@ -399,15 +409,6 @@ export default function TemplatesPage() {
           </div>
         </section>
 
-        {(feedback || error) && (
-          <div className={`rounded-2xl border px-4 py-3 text-sm lg:col-span-2 ${
-            error
-              ? "border-red-500/40 bg-red-500/10 text-red-300"
-              : "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
-          }`}>
-            {error || feedback}
-          </div>
-        )}
       </main>
     </div>
   );

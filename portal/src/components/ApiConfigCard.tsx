@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 interface ApiConfigCardProps {
   baseUrl: string;
   setBaseUrl: (value: string) => void;
@@ -31,6 +33,14 @@ export default function ApiConfigCard({
   setClientId,
   onSave,
 }: ApiConfigCardProps) {
+  const [saved, setSaved] = useState(false);
+
+  function handleSave() {
+    onSave();
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
   return (
     <div className="grid grid-cols-1 gap-4 rounded-2xl border border-slate-800 bg-slate-900/40 p-4 md:grid-cols-4">
       <div>
@@ -87,13 +97,18 @@ export default function ApiConfigCard({
           {activationSuccess}
         </div>
       )}
-      <button
-        type="button"
-        onClick={onSave}
-        className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500 md:col-span-4"
-      >
-        Salvar configurações
-      </button>
+      <div className="md:col-span-4 flex items-center gap-3">
+        <button
+          type="button"
+          onClick={handleSave}
+          className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-500"
+        >
+          {saved ? "Salvo!" : "Salvar configurações"}
+        </button>
+        {saved && (
+          <span className="text-sm text-emerald-400">Configurações salvas localmente.</span>
+        )}
+      </div>
     </div>
   );
 }

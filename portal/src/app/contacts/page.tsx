@@ -29,6 +29,7 @@ export default function ContactsPage() {
   const [previewRows, setPreviewRows] = useState<PreviewRow[]>([]);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const importBlockingMessage = useMemo(
     () =>
       getContactsImportError({
@@ -197,11 +198,12 @@ export default function ContactsPage() {
       setError(importBlockingMessage);
       return;
     }
+    setUploading(true);
     try {
-      const body = fileType === "csv" 
+      const body = fileType === "csv"
         ? JSON.stringify({ csv: csvText })
         : JSON.stringify({ excel: excelDataBase64 });
-        
+
       const response = await fetch(`${baseUrl}/api/clients/${clientId}/contacts/upload`, {
         method: "POST",
         headers: {
@@ -215,6 +217,8 @@ export default function ContactsPage() {
       setFeedback(`Importados ${data.inserted} contatos (de ${data.total}).`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao importar contatos.");
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -249,6 +253,16 @@ export default function ContactsPage() {
       </div>
 
       <main className="mx-auto max-w-6xl px-6 py-8">
+        {(feedback || error) && (
+          <div className={`mb-6 rounded-2xl border px-4 py-3 text-sm ${
+            error
+              ? "border-red-500/40 bg-red-500/10 text-red-300"
+              : "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
+          }`}>
+            {error || feedback}
+          </div>
+        )}
+
         {/* Instruções de importação */}
         <section className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 mb-6">
           <h2 className="text-lg font-semibold mb-2" title="Área para importar contatos para suas campanhas">Importar contatos</h2>
@@ -309,11 +323,11 @@ Pedro Santos,5521777777777,pedro@email.com`}
             <button
               type="button"
               onClick={uploadContacts}
-              disabled={Boolean(importBlockingMessage)}
+              disabled={uploading || Boolean(importBlockingMessage)}
               className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-black hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
               title="Enviar contatos para o sistema"
             >
-              Importar contatos
+              {uploading ? "Importando..." : "Importar contatos"}
             </button>
             {importBlockingMessage && (
               <p className="text-xs text-amber-300" title="Preencha os dados obrigatórios antes de importar">
@@ -340,15 +354,6 @@ Pedro Santos,5521777777777,pedro@email.com`}
           </div>
         </section>
 
-        {(feedback || error) && (
-          <div className={`mt-6 rounded-2xl border px-4 py-3 text-sm ${
-            error
-              ? "border-red-500/40 bg-red-500/10 text-red-300"
-              : "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
-          }`}>
-            {error || feedback}
-          </div>
-        )}
       </main>
     </div>
   );
