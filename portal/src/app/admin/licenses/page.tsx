@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 
 interface LicenseClient {
@@ -35,7 +35,8 @@ export default function AdminLicensesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "active" | "expired">("all");
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copyStatus, setCopyStatus] = useState<Record<string, "idle" | "copied" | "error">>({});
+  const copyTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   // Create form state
   const [showForm, setShowForm] = useState(showCreate);
@@ -162,10 +163,36 @@ export default function AdminLicensesPage() {
     }
   }
 
-  function copyToken(token: string, id: string) {
-    navigator.clipboard.writeText(token);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
+  function scheduleReset(id: string, delayMs: number) {
+    if (copyTimers.current[id]) {
+      clearTimeout(copyTimers.current[id]);
+    }
+    copyTimers.current[id] = setTimeout(() => {
+      setCopyStatus((prev) => ({ ...prev, [id]: "idle" }));
+      delete copyTimers.current[id];
+    }, delayMs);
+  }
+
+  async function copyToken(token: string, id: string) {
+    try {
+      await navigator.clipboard.writeText(token);
+      setCopyStatus((prev) => ({ ...prev, [id]: "copied" }));
+      scheduleReset(id, 1500);
+    } catch {
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = token;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        setCopyStatus((prev) => ({ ...prev, [id]: "copied" }));
+        scheduleReset(id, 1500);
+      } catch {
+        setCopyStatus((prev) => ({ ...prev, [id]: "error" }));
+        scheduleReset(id, 2000);
+      }
+    }
   }
 
   return (
@@ -269,9 +296,20 @@ export default function AdminLicensesPage() {
                     type="button"
                     onClick={() => copyToken(newToken, "new")}
                     className="px-3 py-2 rounded bg-slate-700 text-white text-sm hover:bg-slate-600"
+                    aria-live="polite"
                   >
-                    {copiedId === "new" ? "Copiado!" : "Copiar"}
+                    {copyStatus.new === "copied"
+                      ? "Copiado!"
+                      : copyStatus.new === "error"
+                        ? "Falhou"
+                        : "Copiar"}
                   </button>
+                  {copyStatus.new === "copied" && (
+                    <span className="text-xs text-emerald-400">Copiado ✅</span>
+                  )}
+                  {copyStatus.new === "error" && (
+                    <span className="text-xs text-red-400">Falhou ❌</span>
+                  )}
                 </div>
               </div>
             )}
@@ -328,6 +366,9 @@ export default function AdminLicensesPage() {
                   Plano
                 </th>
                 <th className="text-left text-sm font-medium text-slate-400 px-6 py-4">
+                  Status
+                </th>
+                <th className="text-left text-sm font-medium text-slate-400 px-6 py-4">
                   Validade
                 </th>
                 <th className="text-left text-sm font-medium text-slate-400 px-6 py-4">
@@ -352,9 +393,20 @@ export default function AdminLicensesPage() {
                       <button
                         onClick={() => copyToken(license.token, license.id)}
                         className="text-xs text-violet-400 hover:text-violet-300"
+                        aria-live="polite"
                       >
-                        {copiedId === license.id ? "OK" : "Copiar"}
+                        {copyStatus[license.id] === "copied"
+                          ? "Copiado!"
+                          : copyStatus[license.id] === "error"
+                            ? "Falhou"
+                            : "Copiar"}
                       </button>
+                      {copyStatus[license.id] === "copied" && (
+                        <span className="text-xs text-emerald-400">Copiado ✅</span>
+                      )}
+                      {copyStatus[license.id] === "error" && (
+                        <span className="text-xs text-red-400">Falhou ❌</span>
+                      )}
                     </div>
                   </td>
                   <td className="px-6 py-4 text-white">
@@ -363,6 +415,17 @@ export default function AdminLicensesPage() {
                   <td className="px-6 py-4">
                     <span className="inline-block px-2 py-1 rounded text-xs font-medium bg-slate-700 text-slate-300">
                       {license.plan}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${
+                        license.validationCount > 0
+                          ? "bg-emerald-500/20 text-emerald-300"
+                          : "bg-slate-700 text-slate-300"
+                      }`}
+                    >
+                      {license.validationCount > 0 ? "Validada" : "Não validada"}
                     </span>
                   </td>
                   <td className="px-6 py-4">
