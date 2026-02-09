@@ -1130,6 +1130,111 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if ((req.method === 'POST' || req.method === 'PATCH') && path.startsWith('api/clients/')) {
+    const segments = path.split('/');
+    if (segments.length === 3) {
+      const clientId = Number(segments[2]);
+      if (!clientId) {
+        sendJson(res, 404, { error: 'Cliente inválido.' });
+        return;
+      }
+      const user = requireJwt(req, res);
+      if (!user) {
+        return;
+      }
+      if (!requireClientRole(user, clientId, ['CLIENT_ADMIN'])) {
+        sendJson(res, 403, { error: 'Sem permissão.' });
+        return;
+      }
+      readBody(req)
+        .then((body) => {
+          const payload = JSON.parse(body || '{}');
+          const updateFields = [];
+          const params = [];
+          const metadata = {};
+
+          if (typeof payload.name === 'string' && payload.name.trim().length >= 2) {
+            updateFields.push('name = ?');
+            params.push(payload.name.trim());
+            metadata.name = payload.name.trim();
+          }
+
+          if (typeof payload.aiEnabled === 'boolean') {
+            updateFields.push('ai_enabled = ?');
+            params.push(payload.aiEnabled ? 1 : 0);
+            metadata.aiEnabled = payload.aiEnabled;
+          } else if (payload.aiEnabled === 0 || payload.aiEnabled === 1) {
+            updateFields.push('ai_enabled = ?');
+            params.push(payload.aiEnabled);
+            metadata.aiEnabled = Boolean(payload.aiEnabled);
+          } else if (payload.aiEnabled === 'true' || payload.aiEnabled === 'false') {
+            const enabled = payload.aiEnabled === 'true';
+            updateFields.push('ai_enabled = ?');
+            params.push(enabled ? 1 : 0);
+            metadata.aiEnabled = enabled;
+          }
+
+          const aiDailyLimit = Number(payload.aiDailyLimit);
+          if (Number.isFinite(aiDailyLimit) && aiDailyLimit > 0) {
+            updateFields.push('ai_daily_limit = ?');
+            params.push(aiDailyLimit);
+            metadata.aiDailyLimit = aiDailyLimit;
+          }
+
+          const metaTierLimit = Number(payload.metaTierLimit);
+          if (Number.isFinite(metaTierLimit) && metaTierLimit > 0) {
+            updateFields.push('meta_tier_limit = ?');
+            params.push(metaTierLimit);
+            metadata.metaTierLimit = metaTierLimit;
+          }
+
+          if (updateFields.length === 0) {
+            sendJson(res, 400, { error: 'Nenhum campo válido para atualizar.' });
+            return;
+          }
+
+          const existing = db.prepare('SELECT id FROM clients WHERE id = ?').get(clientId);
+          if (!existing) {
+            sendJson(res, 404, { error: 'Cliente não encontrado.' });
+            return;
+          }
+
+          db.prepare(`UPDATE clients SET ${updateFields.join(', ')} WHERE id = ?`).run(
+            ...params,
+            clientId,
+          );
+
+          const client = db
+            .prepare(
+              'SELECT id, name, ai_enabled, ai_daily_limit, meta_tier_limit FROM clients WHERE id = ?',
+            )
+            .get(clientId);
+
+          logAudit('client.update', {
+            clientId,
+            userId: user.userId,
+            metadata,
+          });
+
+          sendJson(res, 200, {
+            ok: true,
+            client: {
+              id: client.id,
+              name: client.name,
+              aiEnabled: Boolean(client.ai_enabled),
+              aiDailyLimit: client.ai_daily_limit,
+              metaTierLimit: client.meta_tier_limit,
+            },
+          });
+        })
+        .catch((error) => {
+          console.error('[CLIENT] Falha ao atualizar cliente:', error);
+          sendJson(res, 400, { error: 'Falha ao atualizar cliente.' });
+        });
+      return;
+    }
+  }
+
   if (req.method === 'POST' && path.startsWith('api/clients/') && path.endsWith('/limits')) {
     const segments = path.split('/');
     const clientId = Number(segments[2]);
