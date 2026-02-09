@@ -6,6 +6,7 @@ import { getContactsImportError } from "../src/lib/contactsImport";
 
 const canImportHtml = renderToStaticMarkup(
   React.createElement(ContactsEmptyState, {
+    isAuthenticated: true,
     canImportContacts: true,
     importHref: "/contacts",
     showPermissionMessage: true,
@@ -17,7 +18,9 @@ assert.match(canImportHtml, /href="\/contacts"/);
 
 const noPermissionHtml = renderToStaticMarkup(
   React.createElement(ContactsEmptyState, {
+    isAuthenticated: true,
     canImportContacts: false,
+    importHref: "/contacts",
     showPermissionMessage: true,
   }),
 );
@@ -41,6 +44,7 @@ assert.doesNotMatch(authenticatedHtml, /Sem permissão para importar/);
 const unauthenticatedHtml = renderToStaticMarkup(
   React.createElement(ContactsEmptyState, {
     isAuthenticated: false,
+    importHref: "/contacts",
   }),
 );
 
@@ -63,7 +67,7 @@ const errorNoToken = getContactsImportError({
   csvText: "name,phone\nAna,5511999999999",
 });
 
-assert.equal(errorNoToken, "Informe o JWT Token antes de importar.");
+assert.equal(errorNoToken, "Ative sua licença para gerar o JWT antes de importar.");
 
 const noError = getContactsImportError({
   baseUrl: "http://localhost:3001",

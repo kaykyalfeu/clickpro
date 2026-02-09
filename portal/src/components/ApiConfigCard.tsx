@@ -49,7 +49,11 @@ export default function ApiConfigCard({
           value={baseUrl}
           onChange={(event) => setBaseUrl(event.target.value)}
           className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+          placeholder="https://sua-api.exemplo.com"
         />
+        <p className="mt-2 text-xs text-slate-500">
+          Informe a URL do backend para evitar chamadas inválidas.
+        </p>
       </div>
       <div>
         <label className="text-xs text-slate-400">Client ID</label>
