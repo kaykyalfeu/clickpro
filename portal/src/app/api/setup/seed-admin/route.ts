@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { prisma } from "@/lib/prisma";
+
+async function getPrisma() {
+  const { getPrismaClient } = await import("@/lib/prisma");
+  return getPrismaClient();
+}
 
 function hashPassword(password: string): string {
   const salt = crypto.randomBytes(16).toString("hex");
@@ -41,7 +45,7 @@ export async function POST(req: Request) {
     const forceUpdate = body.forceUpdate === true;
 
     // Check if super admin already exists
-    const existingAdmin = await prisma.user.findFirst({
+    const existingAdmin = await (await getPrisma()).user.findFirst({
       where: { role: "SUPER_ADMIN" },
       select: { id: true, email: true },
     });
@@ -55,7 +59,7 @@ export async function POST(req: Request) {
     }
 
     // Create or update super admin
-    const user = await prisma.user.upsert({
+    const user = await (await getPrisma()).user.upsert({
       where: { email },
       update: {
         role: "SUPER_ADMIN",

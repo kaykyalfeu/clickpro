@@ -1,5 +1,5 @@
 import "server-only";
-import { prisma } from "./prisma";
+import { getPrismaClient } from "@/lib/prisma";
 import type { LicenseStatus } from "./license";
 
 /**
@@ -26,7 +26,7 @@ export async function checkClientLicense(
   const now = new Date();
 
   // Find the most recent active license for this client
-  const license = await prisma.license.findFirst({
+  const license = await getPrismaClient().license.findFirst({
     where: {
       clientId,
       expiresAt: { gt: now },
@@ -36,7 +36,7 @@ export async function checkClientLicense(
 
   if (!license) {
     // Check if they have any license (expired)
-    const expiredLicense = await prisma.license.findFirst({
+    const expiredLicense = await getPrismaClient().license.findFirst({
       where: { clientId },
       orderBy: { expiresAt: "desc" },
     });

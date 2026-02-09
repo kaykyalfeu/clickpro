@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { verifyLicense } from "@/lib/license";
+
+async function getPrisma() {
+  const { getPrismaClient } = await import("@/lib/prisma");
+  return getPrismaClient();
+}
 
 export async function POST(req: Request) {
   const ua = req.headers.get("user-agent") || undefined;
@@ -10,7 +14,7 @@ export async function POST(req: Request) {
   const token = body?.licenseKey as string | undefined;
 
   if (!token) {
-    await prisma.licenseValidationLog.create({
+    await (await getPrisma()).licenseValidationLog.create({
       data: { token: "MISSING", valid: false, reason: "MISSING_TOKEN", ip, userAgent: ua }
     });
     return NextResponse.json({ valid: false, reason: "MISSING_TOKEN" }, { status: 400 });
@@ -20,9 +24,9 @@ export async function POST(req: Request) {
   const res = verifyLicense(token, secret);
 
   // tenta vincular ao License do banco (se existir)
-  const dbLicense = await prisma.license.findUnique({ where: { token } }).catch(() => null);
+  const dbLicense = await (await getPrisma()).license.findUnique({ where: { token } }).catch(() => null);
 
-  await prisma.licenseValidationLog.create({
+  await (await getPrisma()).licenseValidationLog.create({
     data: {
       token,
       valid: res.ok,

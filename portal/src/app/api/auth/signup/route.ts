@@ -1,8 +1,12 @@
 import crypto from "crypto";
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
+
+async function getPrisma() {
+  const { getPrismaClient } = await import("@/lib/prisma");
+  return getPrismaClient();
+}
 
 function hashPassword(password: string): string {
   const salt = crypto.randomBytes(16).toString("hex");
@@ -59,7 +63,7 @@ export async function POST(request: Request) {
     const email = rawEmail.toLowerCase().trim();
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
+    const existingUser = await (await getPrisma()).user.findUnique({
       where: { email },
       select: { id: true },
     });
@@ -87,7 +91,7 @@ export async function POST(request: Request) {
     // Add timestamp to ensure unique slug
     const clientSlug = `${baseSlug}-${Date.now().toString(36)}`;
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await (await getPrisma()).$transaction(async (tx) => {
       // Create the client (company)
       const client = await tx.client.create({
         data: {

@@ -1,10 +1,14 @@
 import crypto from "crypto";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { prisma } from "@/lib/prisma";
 import { authOptions, isSuperAdmin } from "@/lib/auth";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import type { Role } from "@prisma/client";
+
+async function getPrisma() {
+  const { getPrismaClient } = await import("@/lib/prisma");
+  return getPrismaClient();
+}
 
 function hashPassword(password: string): string {
   const salt = crypto.randomBytes(16).toString("hex");
@@ -45,7 +49,7 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const clientId = searchParams.get("clientId");
 
-    const users = await prisma.user.findMany({
+    const users = await (await getPrisma()).user.findMany({
       where: clientId
         ? {
             memberships: {
@@ -140,7 +144,7 @@ export async function POST(req: Request) {
     }
 
     // Check if email already exists
-    const existingUser = await prisma.user.findUnique({
+    const existingUser = await (await getPrisma()).user.findUnique({
       where: { email: email.toLowerCase().trim() },
       select: { id: true },
     });
@@ -166,7 +170,7 @@ export async function POST(req: Request) {
 
     // Verify client exists if provided
     if (clientId) {
-      const client = await prisma.client.findUnique({
+      const client = await (await getPrisma()).client.findUnique({
         where: { id: clientId },
       });
 
@@ -195,7 +199,7 @@ export async function POST(req: Request) {
     }
 
     // Create user and membership in a transaction
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await (await getPrisma()).$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
           email: email.toLowerCase().trim(),

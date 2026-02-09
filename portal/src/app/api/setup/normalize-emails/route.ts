@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+
+async function getPrisma() {
+  const { getPrismaClient } = await import("@/lib/prisma");
+  return getPrismaClient();
+}
 
 /**
  * POST /api/setup/normalize-emails
@@ -23,7 +27,7 @@ export async function POST(req: Request) {
     }
 
     // Find all users with non-lowercase emails
-    const allUsers = await prisma.user.findMany({
+    const allUsers = await (await getPrisma()).user.findMany({
       select: { id: true, email: true },
     });
 
@@ -61,7 +65,7 @@ export async function POST(req: Request) {
 
     for (const user of usersToFix) {
       const normalizedEmail = user.email.toLowerCase().trim();
-      await prisma.user.update({
+      await (await getPrisma()).user.update({
         where: { id: user.id },
         data: { email: normalizedEmail },
         select: { id: true },

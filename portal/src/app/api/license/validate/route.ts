@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
+
+async function getPrisma() {
+  const { getPrismaClient } = await import("@/lib/prisma");
+  return getPrismaClient();
+}
 
 interface ValidateLicenseRequest {
   licenseKey: string;
@@ -52,7 +56,7 @@ export async function POST(req: Request) {
     }
 
     // Lookup license in database
-    const license = await prisma.license.findUnique({
+    const license = await (await getPrisma()).license.findUnique({
       where: { token: licenseKey },
       include: { client: true },
     });
@@ -62,7 +66,7 @@ export async function POST(req: Request) {
     const userAgent = req.headers.get("user-agent") || null;
 
     if (!license) {
-      await prisma.licenseValidationLog.create({
+      await (await getPrisma()).licenseValidationLog.create({
         data: {
           token: licenseKey,
           valid: false,
@@ -81,7 +85,7 @@ export async function POST(req: Request) {
 
     const now = new Date();
     if (license.expiresAt < now) {
-      await prisma.licenseValidationLog.create({
+      await (await getPrisma()).licenseValidationLog.create({
         data: {
           licenseId: license.id,
           token: licenseKey,
@@ -103,7 +107,7 @@ export async function POST(req: Request) {
     }
 
     // Valid license
-    await prisma.licenseValidationLog.create({
+    await (await getPrisma()).licenseValidationLog.create({
       data: {
         licenseId: license.id,
         token: licenseKey,

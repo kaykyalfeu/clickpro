@@ -42,21 +42,46 @@ export default function ContactsPage() {
   );
 
   useEffect(() => {
-    const storedJwt = localStorage.getItem("CLICKPRO_JWT");
-    const stored = localStorage.getItem("clickpro-config");
-    if (stored) {
-      const config = JSON.parse(stored) as {
-        baseUrl?: string;
-        token?: string;
-        clientId?: string;
-        licenseKey?: string;
-      };
-      if (config.baseUrl) setBaseUrl(config.baseUrl);
-      if (config.clientId) setClientId(config.clientId);
-      if (config.licenseKey) setLicenseKey(config.licenseKey);
-      if (!storedJwt && config.token) setToken(config.token);
-    }
-    if (storedJwt) setToken(storedJwt);
+    let isMounted = true;
+
+    const loadFromStorage = () => {
+      const storedJwt = localStorage.getItem("CLICKPRO_JWT");
+      const stored = localStorage.getItem("clickpro-config");
+      if (stored) {
+        const config = JSON.parse(stored) as {
+          baseUrl?: string;
+          token?: string;
+          clientId?: string;
+          licenseKey?: string;
+        };
+        if (config.baseUrl) setBaseUrl(config.baseUrl);
+        if (config.clientId) setClientId(config.clientId);
+        if (config.licenseKey) setLicenseKey(config.licenseKey);
+        if (!storedJwt && config.token) setToken(config.token);
+      }
+      if (storedJwt) setToken(storedJwt);
+    };
+
+    const loadFromBackend = async () => {
+      try {
+        const response = await fetch("/api/config", { cache: "no-store" });
+        if (!response.ok) return;
+        const data = await response.json();
+        if (!isMounted || !data?.config) return;
+        if (data.config.baseUrl) setBaseUrl(data.config.baseUrl);
+        if (data.config.clientId) setClientId(data.config.clientId);
+        if (data.config.token) setToken(data.config.token);
+      } catch (error) {
+        console.error("Erro ao carregar configuracoes:", error);
+      }
+    };
+
+    loadFromStorage();
+    void loadFromBackend();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   function saveConfig() {
