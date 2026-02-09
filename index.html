@@ -556,8 +556,8 @@
             <input id="wizardPhoneNumberId" type="text" placeholder="123456789">
           </div>
           <div>
-            <label for="wizardCloudNumber">Cloud Number (E.164)</label>
-            <input id="wizardCloudNumber" type="text" placeholder="+5511999999999">
+            <label for="wizardCloudNumber">Cloud Number (E.164) — opcional</label>
+            <input id="wizardCloudNumber" type="text" placeholder="+5511999999999 (auto-resolvido se vazio)">
           </div>
           <div class="modal-actions">
             <button class="btn btn-secondary" id="testWhatsApp">Testar WhatsApp</button>
@@ -907,7 +907,7 @@
 
     function updateStatusFromConfig(config) {
       const isOpenAiReady = Boolean(config?.openai?.apiKeySet && config?.openai?.assistantId && config?.openai?.commandPrompt);
-      const isWhatsAppReady = Boolean(config?.whatsapp?.tokenSet && config?.whatsapp?.phoneNumberId && config?.whatsapp?.cloudNumber);
+      const isWhatsAppReady = Boolean(config?.whatsapp?.tokenSet);
       openAiStatusTag.textContent = `${isOpenAiReady ? '●' : '○'} OpenAI ${isOpenAiReady ? 'configurado' : 'pendente'}`;
       whatsAppStatusTag.textContent = `${isWhatsAppReady ? '●' : '○'} WhatsApp Business ${isWhatsAppReady ? 'ativo' : 'pendente'}`;
       localStatusTag.textContent = '● Sessão local';
@@ -1083,8 +1083,8 @@
     });
 
     document.getElementById('finishWizard').addEventListener('click', async () => {
-      if (!wizardWhatsAppToken.value.trim() || !wizardPhoneNumberId.value.trim() || !wizardCloudNumber.value.trim()) {
-        showWizardMessage(wizardWhatsAppMessage, 'Preencha todos os campos antes de concluir.');
+      if (!wizardWhatsAppToken.value.trim()) {
+        showWizardMessage(wizardWhatsAppMessage, 'Preencha o token antes de concluir.');
         return;
       }
       const response = await apiFetch('/api/config/save', {

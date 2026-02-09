@@ -393,26 +393,26 @@ export default function CredentialsPage() {
               <p className="mt-1 text-xs text-slate-500" title="Dica de onde encontrar">Encontre em: business.facebook.com → Configurações → Informações da empresa</p>
             </div>
             <div>
-              <label className="text-xs text-slate-400" title="ID do número de telefone cadastrado no WhatsApp Cloud API">Phone Number ID</label>
+              <label className="text-xs text-slate-400" title="ID do número de telefone cadastrado no WhatsApp Cloud API (opcional — será auto-resolvido via Business ID se vazio)">Phone Number ID — opcional</label>
               <input
                 value={phoneNumberId}
                 onChange={(event) => setPhoneNumberId(event.target.value)}
                 className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-                title="Cole o ID do seu número de telefone WhatsApp"
-                placeholder="123456789012345"
+                title="Cole o ID do seu número de telefone WhatsApp (opcional)"
+                placeholder="123456789012345 (auto-resolvido se vazio)"
               />
-              <p className="mt-1 text-xs text-slate-500" title="Dica de onde encontrar">Encontre em: developers.facebook.com → WhatsApp → Configuração da API</p>
+              <p className="mt-1 text-xs text-slate-500" title="Dica de onde encontrar">Opcional. Se vazio, será resolvido automaticamente via Business ID. Encontre em: developers.facebook.com → WhatsApp → Configuração da API</p>
             </div>
             <div>
-              <label className="text-xs text-slate-400" title="Seu número de telefone no formato internacional E.164">Cloud Number (E.164)</label>
+              <label className="text-xs text-slate-400" title="Seu número de telefone no formato internacional E.164 (opcional — será auto-resolvido via WABA se vazio)">Cloud Number (E.164) — opcional</label>
               <input
                 value={cloudNumber}
                 onChange={(event) => setCloudNumber(event.target.value)}
                 className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-                title="Digite seu número no formato internacional"
-                placeholder="+5511999999999"
+                title="Digite seu número no formato internacional (opcional)"
+                placeholder="+5511999999999 (auto-resolvido se vazio)"
               />
-              <p className="mt-1 text-xs text-slate-500" title="Formato do número">Formato: +[código país][DDD][número] sem espaços</p>
+              <p className="mt-1 text-xs text-slate-500" title="Formato do número">Opcional. Formato: +[código país][DDD][número] sem espaços. Se vazio, será resolvido automaticamente via WABA.</p>
             </div>
             <div>
               <label className="text-xs text-slate-400" title="Token de acesso permanente da API do WhatsApp">Access Token</label>

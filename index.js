@@ -201,7 +201,7 @@ function getOpenAiCredentials(clientId) {
 
 function getWhatsappCredentials(clientId) {
   const row = db
-    .prepare('SELECT token_enc, phone_number_id, cloud_number FROM whatsapp_credentials WHERE client_id = ?')
+    .prepare('SELECT token_enc, phone_number_id, cloud_number, business_id FROM whatsapp_credentials WHERE client_id = ?')
     .get(clientId);
   if (!row) {
     return null;
@@ -209,7 +209,8 @@ function getWhatsappCredentials(clientId) {
   return {
     token: decryptSecret(row.token_enc),
     phoneNumberId: row.phone_number_id,
-    cloudNumber: row.cloud_number,
+    cloudNumber: row.cloud_number || '',
+    businessId: row.business_id || '',
   };
 }
 
@@ -300,19 +301,58 @@ function canSendForTier(clientId) {
 }
 
 /**
+ * Resolve o Phone Number ID via Graph API usando o WABA (Business ID).
+ * Chama GET /v19.0/<wabaId>/phone_numbers e retorna o primeiro phone_number_id.
+ *
+ * @param {{ wabaId: string, accessToken: string }} params
+ * @returns {Promise<string>} O phone_number_id resolvido.
+ */
+async function resolveWhatsAppPhoneNumberId({ wabaId, accessToken }) {
+  if (!wabaId || !accessToken) {
+    throw new Error('wabaId e accessToken são obrigatórios para resolver o Phone Number ID.');
+  }
+  const response = await fetch(
+    `https://graph.facebook.com/v19.0/${wabaId}/phone_numbers`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error?.message || 'Falha ao buscar phone numbers via WABA.');
+  }
+  if (!data.data || data.data.length === 0) {
+    throw new Error('Nenhum número de telefone encontrado na conta WABA.');
+  }
+  return data.data[0].id;
+}
+
+/**
  * Envia uma mensagem para um telefone via API do WhatsApp Cloud.
- * Necessita das variáveis de ambiente WHATSAPP_TOKEN e
- * WHATSAPP_PHONE_NUMBER_ID.
+ * Fallback chain para phoneNumberId: options.phoneNumberId → env → auto-resolução via WABA.
  *
  * @param {string} phone Destinatário em formato E.164 (sem '+').
  * @param {string} message Texto a ser enviado.
- * @param {{ token?: string, phoneNumberId?: string }} options Credenciais.
+ * @param {{ token?: string, phoneNumberId?: string, businessId?: string }} options Credenciais.
  */
 async function sendWhatsAppMessage(phone, message, options = {}) {
   const token = options.token || process.env.WHATSAPP_TOKEN;
-  const phoneNumberId = options.phoneNumberId || process.env.WHATSAPP_PHONE_NUMBER_ID;
-  if (!token || !phoneNumberId) {
-    console.error('[WA] API não configurada. Defina WHATSAPP_TOKEN e WHATSAPP_PHONE_NUMBER_ID.');
+  let phoneNumberId = options.phoneNumberId || process.env.WHATSAPP_PHONE_NUMBER_ID;
+  if (!token) {
+    console.error('[WA] API não configurada. Defina WHATSAPP_TOKEN.');
+    return;
+  }
+  if (!phoneNumberId && options.businessId) {
+    try {
+      phoneNumberId = await resolveWhatsAppPhoneNumberId({
+        wabaId: options.businessId,
+        accessToken: token,
+      });
+      console.log('[WA] Phone Number ID resolvido via WABA:', phoneNumberId);
+    } catch (err) {
+      console.error('[WA] Falha ao resolver Phone Number ID via WABA:', err.message);
+    }
+  }
+  if (!phoneNumberId) {
+    console.error('[WA] API não configurada. phoneNumberId ausente e não foi possível resolver via WABA.');
     return;
   }
   try {
@@ -434,6 +474,7 @@ async function handleIncomingMessage(clientId, phone, text) {
   sendWhatsAppMessage(normalizedPhone, aiResponse, {
     token: whatsappConfig?.token,
     phoneNumberId: whatsappConfig?.phoneNumberId,
+    businessId: whatsappConfig?.businessId,
   });
 }
 
@@ -613,8 +654,24 @@ const server = http.createServer((req, res) => {
           return;
         }
         const whatsapp = getWhatsappCredentials(clientId);
-        if (!whatsapp?.token || !whatsapp.phoneNumberId) {
+        if (!whatsapp?.token) {
           sendJson(res, 400, { error: 'Credenciais WhatsApp ausentes.' });
+          return;
+        }
+        let mediaPhoneNumberId = whatsapp.phoneNumberId;
+        if (!mediaPhoneNumberId && whatsapp.businessId) {
+          try {
+            mediaPhoneNumberId = await resolveWhatsAppPhoneNumberId({
+              wabaId: whatsapp.businessId,
+              accessToken: whatsapp.token,
+            });
+          } catch (err) {
+            sendJson(res, 400, { error: 'Falha ao resolver phoneNumberId: ' + err.message });
+            return;
+          }
+        }
+        if (!mediaPhoneNumberId) {
+          sendJson(res, 400, { error: 'phoneNumberId ausente e não foi possível resolver via WABA.' });
           return;
         }
         const buffer = Buffer.from(fileBase64, 'base64');
@@ -622,7 +679,7 @@ const server = http.createServer((req, res) => {
         form.append('messaging_product', 'whatsapp');
         form.append('type', mimeType);
         form.append('file', new Blob([buffer], { type: mimeType }), fileName || 'media');
-        const response = await fetch(`https://graph.facebook.com/v19.0/${whatsapp.phoneNumberId}/media`, {
+        const response = await fetch(`https://graph.facebook.com/v19.0/${mediaPhoneNumberId}/media`, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${whatsapp.token}`,
@@ -969,6 +1026,7 @@ const server = http.createServer((req, res) => {
         sendWhatsAppMessage(phone, message, {
           token: whatsapp?.token,
           phoneNumberId: whatsapp?.phoneNumberId,
+          businessId: whatsapp?.businessId,
         });
         logAudit('message.manual_send', {
           clientId,
@@ -1316,9 +1374,24 @@ const server = http.createServer((req, res) => {
         const payload = JSON.parse(body || '{}');
         const config = configStore.getConfig();
         const token = payload.token || config?.whatsapp?.token;
-        const phoneNumberId = payload.phoneNumberId || config?.whatsapp?.phoneNumberId;
-        if (!token || !phoneNumberId) {
-          sendJson(res, 400, { error: 'Informe token e phoneNumberId.' });
+        let phoneNumberId = payload.phoneNumberId || config?.whatsapp?.phoneNumberId;
+        if (!token) {
+          sendJson(res, 400, { error: 'Informe o token.' });
+          return;
+        }
+        if (!phoneNumberId && payload.businessId) {
+          try {
+            phoneNumberId = await resolveWhatsAppPhoneNumberId({
+              wabaId: payload.businessId,
+              accessToken: token,
+            });
+          } catch (err) {
+            sendJson(res, 400, { error: err.message });
+            return;
+          }
+        }
+        if (!phoneNumberId) {
+          sendJson(res, 400, { error: 'Informe phoneNumberId ou businessId para auto-resolução.' });
           return;
         }
         const response = await fetch(`https://graph.facebook.com/v19.0/${phoneNumberId}`, {
@@ -1329,7 +1402,7 @@ const server = http.createServer((req, res) => {
           sendJson(res, 400, { error: data.error?.message || 'Falha ao validar WhatsApp.' });
           return;
         }
-        sendJson(res, 200, { ok: true });
+        sendJson(res, 200, { ok: true, resolvedPhoneNumberId: phoneNumberId });
       })
       .catch((error) => {
         console.error('[CONFIG] Falha no teste WhatsApp:', error);
@@ -1397,30 +1470,41 @@ const server = http.createServer((req, res) => {
     readBody(req)
       .then(async (body) => {
         const payload = JSON.parse(body || '{}');
-        if (!payload.token || !payload.phoneNumberId || !payload.cloudNumber || !payload.businessId) {
-          sendJson(res, 400, { error: 'Informe token, phoneNumberId, cloudNumber e businessId.' });
+        if (!payload.token || !payload.businessId) {
+          sendJson(res, 400, { error: 'Informe token e businessId.' });
           return;
         }
         const response = await fetch(
           `https://graph.facebook.com/v19.0/${payload.businessId}/phone_numbers`,
           { headers: { Authorization: `Bearer ${payload.token}` } },
         );
+        const wabaData = await response.json();
         if (!response.ok) {
-          const data = await response.json();
-          sendJson(res, 400, { error: data.error?.message || 'Falha ao validar WhatsApp.' });
+          sendJson(res, 400, { error: wabaData.error?.message || 'Falha ao validar WhatsApp.' });
           return;
         }
+        let resolvedPhoneNumberId = payload.phoneNumberId || '';
+        if (!resolvedPhoneNumberId) {
+          if (wabaData.data && wabaData.data.length > 0) {
+            resolvedPhoneNumberId = wabaData.data[0].id;
+          }
+        }
+        if (!resolvedPhoneNumberId) {
+          sendJson(res, 400, { error: 'Nenhum phoneNumberId encontrado. Informe manualmente ou verifique o businessId.' });
+          return;
+        }
+        const cloudNumber = payload.cloudNumber || '';
         db.prepare(
-          `INSERT INTO whatsapp_credentials (client_id, token_enc, phone_number_id, cloud_number, created_at)
-           VALUES (?, ?, ?, ?, ?)
-           ON CONFLICT(client_id) DO UPDATE SET token_enc = excluded.token_enc, phone_number_id = excluded.phone_number_id, cloud_number = excluded.cloud_number`,
-        ).run(clientId, encryptSecret(payload.token), payload.phoneNumberId, payload.cloudNumber, nowIso());
+          `INSERT INTO whatsapp_credentials (client_id, token_enc, phone_number_id, cloud_number, business_id, created_at)
+           VALUES (?, ?, ?, ?, ?, ?)
+           ON CONFLICT(client_id) DO UPDATE SET token_enc = excluded.token_enc, phone_number_id = excluded.phone_number_id, cloud_number = excluded.cloud_number, business_id = excluded.business_id`,
+        ).run(clientId, encryptSecret(payload.token), resolvedPhoneNumberId, cloudNumber, payload.businessId, nowIso());
         logAudit('credentials.whatsapp_update', {
           clientId,
           userId: user.userId,
-          metadata: { phoneNumberId: payload.phoneNumberId },
+          metadata: { phoneNumberId: resolvedPhoneNumberId },
         });
-        sendJson(res, 200, { ok: true });
+        sendJson(res, 200, { ok: true, resolvedPhoneNumberId });
       })
       .catch((error) => {
         console.error('[WHATSAPP] Falha ao salvar credenciais:', error);
@@ -1591,6 +1675,7 @@ const server = http.createServer((req, res) => {
         sendWhatsAppMessage(phone, message, {
           token: whatsappConfig?.token,
           phoneNumberId: whatsappConfig?.phoneNumberId,
+          businessId: whatsappConfig?.businessId,
         }).then(() => {
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ success: true }));
@@ -1673,6 +1758,7 @@ function processCampaigns() {
     sendWhatsAppMessage(nextContact.phone, template.body_text, {
       token: whatsapp.token,
       phoneNumberId: whatsapp.phoneNumberId,
+      businessId: whatsapp.businessId,
     });
     db.prepare('UPDATE campaign_contacts SET status = ? WHERE id = ?').run('SENT', nextContact.campaign_contact_id);
     db.prepare('UPDATE campaigns SET last_sent_at = ? WHERE id = ?').run(nowIso(), campaign.id);
