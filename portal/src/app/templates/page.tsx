@@ -16,7 +16,9 @@ interface TemplateItem {
   created_at: string;
 }
 
-const defaultBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://clickpro.grupogarciaseguradoras.com.br";
+const defaultBaseUrl = process.env.NEXT_PUBLIC_CLICKPRO_API_URL
+  ?? process.env.NEXT_PUBLIC_API_BASE_URL
+  ?? "";
 
 export default function TemplatesPage() {
   const [baseUrl, setBaseUrl] = useState(defaultBaseUrl);

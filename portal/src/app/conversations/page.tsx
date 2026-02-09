@@ -23,7 +23,9 @@ interface Message {
   phone: string | null;
 }
 
-const defaultBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://clickpro.grupogarciaseguradoras.com.br";
+const defaultBaseUrl = process.env.NEXT_PUBLIC_CLICKPRO_API_URL
+  ?? process.env.NEXT_PUBLIC_API_BASE_URL
+  ?? "";
 
 export default function ConversationsPage() {
   const [baseUrl, setBaseUrl] = useState(defaultBaseUrl);
