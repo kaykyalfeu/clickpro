@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { getServerSession } from "next-auth";
-import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { authOptions, isSuperAdmin } from "@/lib/auth";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
+
+async function getPrisma() {
+  const { getPrismaClient } = await import("@/lib/prisma");
+  return getPrismaClient();
+}
 
 // GET /api/admin/clients - List all clients
 export async function GET() {
@@ -30,7 +34,7 @@ export async function GET() {
       );
     }
 
-    const clients = await prisma.client.findMany({
+    const clients = await (await getPrisma()).client.findMany({
       include: {
         _count: {
           select: {
@@ -139,7 +143,7 @@ export async function POST(req: Request) {
       .replace(/^-|-$/g, "");
 
     // Check if slug already exists
-    const existingClient = await prisma.client.findUnique({
+    const existingClient = await (await getPrisma()).client.findUnique({
       where: { slug: clientSlug },
     });
 
@@ -150,7 +154,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const client = await prisma.client.create({
+    const client = await (await getPrisma()).client.create({
       data: {
         name: name.trim(),
         slug: clientSlug,

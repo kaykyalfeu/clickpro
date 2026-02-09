@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { prisma } from "@/lib/prisma";
 import { authOptions, isSuperAdmin } from "@/lib/auth";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+async function getPrisma() {
+  const { getPrismaClient } = await import("@/lib/prisma");
+  return getPrismaClient();
+}
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -34,7 +41,7 @@ export async function GET(req: Request, { params }: RouteParams) {
 
     const { id } = await params;
 
-    const client = await prisma.client.findUnique({
+    const client = await (await getPrisma()).client.findUnique({
       where: { id },
       include: {
         members: {
@@ -129,7 +136,7 @@ export async function PATCH(req: Request, { params }: RouteParams) {
     const body = await req.json();
     const { name, slug } = body;
 
-    const existing = await prisma.client.findUnique({
+    const existing = await (await getPrisma()).client.findUnique({
       where: { id },
     });
 
@@ -148,7 +155,7 @@ export async function PATCH(req: Request, { params }: RouteParams) {
 
     if (slug && typeof slug === "string" && slug.trim().length >= 2) {
       // Check if new slug conflicts with another client
-      const slugConflict = await prisma.client.findFirst({
+      const slugConflict = await (await getPrisma()).client.findFirst({
         where: {
           slug: slug.trim(),
           id: { not: id },
@@ -172,7 +179,7 @@ export async function PATCH(req: Request, { params }: RouteParams) {
       );
     }
 
-    const client = await prisma.client.update({
+    const client = await (await getPrisma()).client.update({
       where: { id },
       data: updateData,
     });
@@ -221,7 +228,7 @@ export async function DELETE(req: Request, { params }: RouteParams) {
 
     const { id } = await params;
 
-    const client = await prisma.client.findUnique({
+    const client = await (await getPrisma()).client.findUnique({
       where: { id },
       include: {
         _count: {
@@ -249,7 +256,7 @@ export async function DELETE(req: Request, { params }: RouteParams) {
       );
     }
 
-    await prisma.client.delete({
+    await (await getPrisma()).client.delete({
       where: { id },
     });
 

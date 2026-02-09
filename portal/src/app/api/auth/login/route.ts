@@ -1,7 +1,11 @@
 import crypto from "crypto";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
+
+async function getPrisma() {
+  const { getPrismaClient } = await import("@/lib/prisma");
+  return getPrismaClient();
+}
 
 /**
  * Verify password using timing-safe comparison
@@ -111,7 +115,7 @@ export async function POST(request: Request) {
     const normalizedEmail = email.toLowerCase().trim();
 
     // Find user
-    const user = await prisma.user.findUnique({
+    const user = await (await getPrisma()).user.findUnique({
       where: { email: normalizedEmail },
       select: {
         id: true,

@@ -307,12 +307,9 @@ export default function AuthCard({ initialView = "signin" }: AuthCardProps) {
           <div className="auth-hero-inner">
             <div className="hero-content signin">
               <div className="hero-brand">
-                <Image src="/logomarca-click-pro.png" alt="Logomarca ClickPro" width={56} height={56} priority />
-                <div>
-                  <h2>Bem-vindo ao ClickPro</h2>
-                  <h3>Faça login para gerenciar campanhas, contatos e resultados.</h3>
-                </div>
+                <Brand size="md" subtitle="Welcome Back" subtitleClassName="hero-subtitle" />
               </div>
+              <p className="hero-description">Faça login para gerenciar campanhas, contatos e resultados.</p>
 
               <Image
                 src="/banner-clickpro.png"
@@ -329,12 +326,9 @@ export default function AuthCard({ initialView = "signin" }: AuthCardProps) {
             </div>
             <div className="hero-content signup">
               <div className="hero-brand">
-                <Image src="/logomarca-click-pro.png" alt="Logomarca ClickPro" width={56} height={56} />
-                <div>
-                  <h2>Crie sua conta ClickPro</h2>
-                  <h3>Comece em poucos passos e ganhe velocidade na operação comercial.</h3>
-                </div>
+                <Brand size="md" subtitle="Sign Up Now" subtitleClassName="hero-subtitle" />
               </div>
+              <p className="hero-description">Comece em poucos passos e ganhe velocidade na operação comercial.</p>
 
               <Image
                 src="/banner-clickpro.png"

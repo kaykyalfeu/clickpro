@@ -3,7 +3,7 @@ import type { NextAuthOptions, Session } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
-import { prisma } from "./prisma";
+import { getPrismaClient } from "@/lib/prisma";
 
 // Role enum matching prisma schema
 export type Role = "SUPER_ADMIN" | "CLIENT_ADMIN" | "CLIENT_USER";
@@ -115,7 +115,7 @@ export const authOptions: NextAuthOptions = {
           }
 
           const normalizedEmail = credentials.email.toLowerCase().trim();
-          const user = await prisma.user.findUnique({
+          const user = await getPrismaClient().user.findUnique({
             where: { email: normalizedEmail },
             select: {
               id: true,
@@ -206,7 +206,7 @@ export const authOptions: NextAuthOptions = {
           const providerId = account.providerAccountId;
 
           // Check if user already exists by email
-          const existingUser = await prisma.user.findUnique({
+          const existingUser = await getPrismaClient().user.findUnique({
             where: { email },
             select: {
               id: true,
@@ -229,7 +229,7 @@ export const authOptions: NextAuthOptions = {
               : existingUser.githubId;
 
             if (!currentProviderId) {
-              await prisma.user.update({
+              await getPrismaClient().user.update({
                 where: { id: existingUser.id },
                 data: {
                   [providerIdField]: providerId,
@@ -244,7 +244,7 @@ export const authOptions: NextAuthOptions = {
             const slug = generateSlug(userName);
             const clientId = generateClientId();
 
-            await prisma.$transaction(async (tx) => {
+            await getPrismaClient().$transaction(async (tx) => {
               // Create client first
               const client = await tx.client.create({
                 data: {
@@ -293,7 +293,7 @@ export const authOptions: NextAuthOptions = {
       if (account && (account.provider === "google" || account.provider === "github")) {
         const email = token.email?.toLowerCase().trim();
         if (email) {
-          const dbUser = await prisma.user.findUnique({
+          const dbUser = await getPrismaClient().user.findUnique({
             where: { email },
             select: {
               id: true,

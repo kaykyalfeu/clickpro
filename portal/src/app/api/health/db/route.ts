@@ -1,6 +1,10 @@
 import "server-only";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+
+async function getPrisma() {
+  const { getPrismaClient } = await import("@/lib/prisma");
+  return getPrismaClient();
+}
 
 // Common database error codes and their meanings
 const errorDescriptions: Record<string, string> = {
@@ -27,7 +31,7 @@ export async function GET() {
 
   try {
     // Test database connectivity by counting users
-    const userCount = await prisma.user.count();
+    const userCount = await (await getPrisma()).user.count();
     const duration = Date.now() - startTime;
 
     // Check if DATABASE_URL is configured (without exposing sensitive data)

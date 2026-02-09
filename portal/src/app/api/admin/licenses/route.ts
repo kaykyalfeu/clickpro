@@ -1,9 +1,13 @@
 import crypto from "crypto";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { prisma } from "@/lib/prisma";
 import { authOptions, isSuperAdmin } from "@/lib/auth";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
+
+async function getPrisma() {
+  const { getPrismaClient } = await import("@/lib/prisma");
+  return getPrismaClient();
+}
 
 function generateLicenseKey(): string {
   const segments: string[] = [];
@@ -58,7 +62,7 @@ export async function GET(req: Request) {
       whereClause.expiresAt = { lte: now };
     }
 
-    const licenses = await prisma.license.findMany({
+    const licenses = await (await getPrisma()).license.findMany({
       where: whereClause,
       include: {
         client: {
@@ -141,7 +145,7 @@ export async function POST(req: Request) {
     }
 
     // Verify client exists
-    const client = await prisma.client.findUnique({
+    const client = await (await getPrisma()).client.findUnique({
       where: { id: clientId },
     });
 
@@ -157,7 +161,7 @@ export async function POST(req: Request) {
       Date.now() + expiresInDays * 24 * 60 * 60 * 1000
     );
 
-    const license = await prisma.license.create({
+    const license = await (await getPrisma()).license.create({
       data: {
         token: licenseKey,
         clientId,

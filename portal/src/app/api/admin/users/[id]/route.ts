@@ -1,10 +1,14 @@
 import crypto from "crypto";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { prisma } from "@/lib/prisma";
 import { authOptions, isSuperAdmin } from "@/lib/auth";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import type { Role } from "@prisma/client";
+
+async function getPrisma() {
+  const { getPrismaClient } = await import("@/lib/prisma");
+  return getPrismaClient();
+}
 
 function hashPassword(password: string): string {
   const salt = crypto.randomBytes(16).toString("hex");
@@ -48,7 +52,7 @@ export async function GET(req: Request, { params }: RouteParams) {
 
     const { id } = await params;
 
-    const user = await prisma.user.findUnique({
+    const user = await (await getPrisma()).user.findUnique({
       where: { id },
       select: {
         id: true,
@@ -131,7 +135,7 @@ export async function PATCH(req: Request, { params }: RouteParams) {
     const body = await req.json();
     const { name, role, resetPassword, newPassword, addToClient, removeFromClient } = body;
 
-    const existing = await prisma.user.findUnique({
+    const existing = await (await getPrisma()).user.findUnique({
       where: { id },
       select: {
         id: true,
@@ -194,7 +198,7 @@ export async function PATCH(req: Request, { params }: RouteParams) {
     }
 
     const targetClient = addToClient
-      ? await prisma.client.findUnique({ where: { id: addToClient } })
+      ? await (await getPrisma()).client.findUnique({ where: { id: addToClient } })
       : null;
 
     if (addToClient && !targetClient) {
@@ -204,7 +208,7 @@ export async function PATCH(req: Request, { params }: RouteParams) {
       );
     }
 
-    const updatedUser = await prisma.$transaction(async (tx) => {
+    const updatedUser = await (await getPrisma()).$transaction(async (tx) => {
       const user = await tx.user.update({
         where: { id },
         data: updateData,
@@ -311,7 +315,7 @@ export async function DELETE(req: Request, { params }: RouteParams) {
       );
     }
 
-    const user = await prisma.user.findUnique({
+    const user = await (await getPrisma()).user.findUnique({
       where: { id },
       select: { id: true },
     });
@@ -324,11 +328,11 @@ export async function DELETE(req: Request, { params }: RouteParams) {
     }
 
     // Delete memberships first, then user
-    await prisma.$transaction([
-      prisma.clientMember.deleteMany({
+    await (await getPrisma()).$transaction([
+      (await getPrisma()).clientMember.deleteMany({
         where: { userId: id },
       }),
-      prisma.user.delete({
+      (await getPrisma()).user.delete({
         where: { id },
         select: { id: true },
       }),

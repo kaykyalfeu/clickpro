@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { prisma } from "@/lib/prisma";
 import { authOptions, isSuperAdmin } from "@/lib/auth";
+
+async function getPrisma() {
+  const { getPrismaClient } = await import("@/lib/prisma");
+  return getPrismaClient();
+}
 
 // GET /api/dashboard/metrics - Get dashboard metrics
 export async function GET() {
@@ -36,13 +40,13 @@ export async function GET() {
         usersCreatedLast30d,
         recentUsers,
       ] = await Promise.all([
-        prisma.client.count(),
-        prisma.user.count(),
-        prisma.license.count(),
-        prisma.license.count({
+        (await getPrisma()).client.count(),
+        (await getPrisma()).user.count(),
+        (await getPrisma()).license.count(),
+        (await getPrisma()).license.count({
           where: { expiresAt: { gt: now } },
         }),
-        prisma.license.count({
+        (await getPrisma()).license.count({
           where: {
             expiresAt: {
               gt: now,
@@ -50,22 +54,22 @@ export async function GET() {
             },
           },
         }),
-        prisma.licenseValidationLog.count({
+        (await getPrisma()).licenseValidationLog.count({
           where: { createdAt: { gt: twentyFourHoursAgo } },
         }),
-        prisma.licenseValidationLog.count({
+        (await getPrisma()).licenseValidationLog.count({
           where: { createdAt: { gt: twentyFourHoursAgo }, valid: true },
         }),
-        prisma.licenseValidationLog.count({
+        (await getPrisma()).licenseValidationLog.count({
           where: { createdAt: { gt: twentyFourHoursAgo }, valid: false },
         }),
-        prisma.user.count({
+        (await getPrisma()).user.count({
           where: { createdAt: { gt: sevenDaysAgo } },
         }),
-        prisma.user.count({
+        (await getPrisma()).user.count({
           where: { createdAt: { gt: thirtyDaysAgo } },
         }),
-        prisma.user.findMany({
+        (await getPrisma()).user.findMany({
           select: {
             id: true,
             email: true,
@@ -142,23 +146,23 @@ export async function GET() {
         validationsLast24h,
         successfulValidations24h,
       ] = await Promise.all([
-        prisma.client.findUnique({
+        (await getPrisma()).client.findUnique({
           where: { id: clientId },
           select: { name: true, createdAt: true },
         }),
-        prisma.clientMember.count({
+        (await getPrisma()).clientMember.count({
           where: { clientId },
         }),
-        prisma.license.count({
+        (await getPrisma()).license.count({
           where: { clientId, expiresAt: { gt: now } },
         }),
-        prisma.licenseValidationLog.count({
+        (await getPrisma()).licenseValidationLog.count({
           where: {
             createdAt: { gt: twentyFourHoursAgo },
             license: { clientId },
           },
         }),
-        prisma.licenseValidationLog.count({
+        (await getPrisma()).licenseValidationLog.count({
           where: {
             createdAt: { gt: twentyFourHoursAgo },
             license: { clientId },
@@ -168,7 +172,7 @@ export async function GET() {
       ]);
 
       // Get active license details
-      const activeLicense = await prisma.license.findFirst({
+      const activeLicense = await (await getPrisma()).license.findFirst({
         where: { clientId, expiresAt: { gt: now } },
         orderBy: { expiresAt: "desc" },
       });

@@ -156,6 +156,9 @@ function requireClientAccess(user, clientId) {
   if (user.role === 'SUPER_ADMIN') {
     return true;
   }
+  if (user.clientId && String(user.clientId) === String(clientId)) {
+    return true;
+  }
   const membership = getClientMembership(user.userId, clientId);
   return Boolean(membership);
 }

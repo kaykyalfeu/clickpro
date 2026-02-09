@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { prisma } from "@/lib/prisma";
 import { authOptions, isSuperAdmin } from "@/lib/auth";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
+
+async function getPrisma() {
+  const { getPrismaClient } = await import("@/lib/prisma");
+  return getPrismaClient();
+}
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -34,7 +38,7 @@ export async function GET(req: Request, { params }: RouteParams) {
 
     const { id } = await params;
 
-    const license = await prisma.license.findUnique({
+    const license = await (await getPrisma()).license.findUnique({
       where: { id },
       include: {
         client: {
@@ -118,7 +122,7 @@ export async function PATCH(req: Request, { params }: RouteParams) {
     const body = await req.json();
     const { revoke, extendDays, plan, features, limits } = body;
 
-    const license = await prisma.license.findUnique({
+    const license = await (await getPrisma()).license.findUnique({
       where: { id },
     });
 
@@ -167,7 +171,7 @@ export async function PATCH(req: Request, { params }: RouteParams) {
       );
     }
 
-    const updated = await prisma.license.update({
+    const updated = await (await getPrisma()).license.update({
       where: { id },
       data: updateData,
       include: {
@@ -179,7 +183,7 @@ export async function PATCH(req: Request, { params }: RouteParams) {
 
     // Log revocation
     if (revoke) {
-      await prisma.licenseValidationLog.create({
+      await (await getPrisma()).licenseValidationLog.create({
         data: {
           licenseId: id,
           token: license.token,
@@ -241,7 +245,7 @@ export async function DELETE(req: Request, { params }: RouteParams) {
 
     const { id } = await params;
 
-    const license = await prisma.license.findUnique({
+    const license = await (await getPrisma()).license.findUnique({
       where: { id },
     });
 
@@ -253,11 +257,11 @@ export async function DELETE(req: Request, { params }: RouteParams) {
     }
 
     // Delete validation logs first, then license
-    await prisma.$transaction([
-      prisma.licenseValidationLog.deleteMany({
+    await (await getPrisma()).$transaction([
+      (await getPrisma()).licenseValidationLog.deleteMany({
         where: { licenseId: id },
       }),
-      prisma.license.delete({
+      (await getPrisma()).license.delete({
         where: { id },
       }),
     ]);
