@@ -13,6 +13,21 @@ The proxy function in `portal/src/lib/apiProxy.ts` now includes:
 3. **Validation** - Client ID and environment variables are validated
 4. **Structured error responses** - All errors return JSON with `error` and `details` fields
 
+## Logging Levels
+
+The proxy now uses different logging levels:
+
+- **Development Mode** (`NODE_ENV=development`): All debug logs are enabled
+- **Production Mode with Debug**: Set `DEBUG_API_PROXY=true` to enable detailed logging
+- **Production Mode**: Only critical errors are logged
+
+This reduces log noise and costs in production while maintaining full debugging capability when needed.
+
+To enable debug logging in production (Vercel):
+1. Go to Project Settings > Environment Variables
+2. Add `DEBUG_API_PROXY` with value `true`
+3. Redeploy
+
 ## Error Scenarios & Expected Responses
 
 ### Scenario 1: Missing Environment Variable (CLICKPRO_API_URL)
@@ -32,13 +47,18 @@ GET /api/clients/123/templates
 
 **Status:** `500`
 
-**Server Logs:**
+**Server Logs (Development/Debug mode):**
 ```
 [apiProxy] Request method: GET
 [apiProxy] Path segments: ['123', 'templates']
 [apiProxy] Request URL: http://localhost:3000/api/clients/123/templates
 [apiProxy] Client ID: 123
 [apiProxy] Base URL: (not set)
+[apiProxy] ERROR: Failed to build upstream URL - CLICKPRO_API_URL not configured
+```
+
+**Server Logs (Production mode):**
+```
 [apiProxy] ERROR: Failed to build upstream URL - CLICKPRO_API_URL not configured
 ```
 
@@ -61,12 +81,10 @@ GET /api/clients//templates
 
 **Server Logs:**
 ```
-[apiProxy] Request method: GET
-[apiProxy] Path segments: ['', 'templates']
-[apiProxy] Request URL: http://localhost:3000/api/clients//templates
-[apiProxy] Client ID: 
 [apiProxy] ERROR: Missing client ID in path
 ```
+
+**Note:** The client ID is validated with `.trim()`, so empty strings are treated as missing.
 
 ### Scenario 3: Upstream API Returns 404 (Client Not Found)
 
@@ -88,7 +106,7 @@ GET /api/clients/999999/templates
 
 **Status:** `404`
 
-**Server Logs:**
+**Server Logs (Development/Debug mode):**
 ```
 [apiProxy] Request method: GET
 [apiProxy] Path segments: ['999999', 'templates']
@@ -99,6 +117,11 @@ GET /api/clients/999999/templates
 [apiProxy] Sending request to upstream...
 [apiProxy] Upstream response status: 404
 [apiProxy] Upstream response ok: false
+[apiProxy] Upstream error response body: {"error":"Client not found"}
+```
+
+**Server Logs (Production mode):**
+```
 [apiProxy] Upstream error response body: {"error":"Client not found"}
 ```
 
@@ -143,7 +166,7 @@ GET /api/clients/123/templates
 GET /api/clients/123/templates
 ```
 
-**Expected Response:**
+**Expected Response (Development):**
 ```json
 {
   "error": "Internal proxy error",
@@ -152,21 +175,24 @@ GET /api/clients/123/templates
 }
 ```
 
+**Expected Response (Production):**
+```json
+{
+  "error": "Internal proxy error",
+  "details": "fetch failed"
+}
+```
+
 **Status:** `500`
 
 **Server Logs:**
 ```
-[apiProxy] Request method: GET
-[apiProxy] Path segments: ['123', 'templates']
-[apiProxy] Request URL: http://localhost:3000/api/clients/123/templates
-[apiProxy] Client ID: 123
-[apiProxy] Base URL: http://invalid-domain:3001
-[apiProxy] Upstream URL: http://invalid-domain:3001/api/clients/123/templates
-[apiProxy] Sending request to upstream...
 [apiProxy] CRITICAL ERROR: Error: fetch failed
 [apiProxy] Error stack: Error: fetch failed
     at ...
 ```
+
+**Note:** Stack traces are only included in the response body in development mode for security reasons. They are always logged server-side.
 
 ### Scenario 6: Successful Request
 
@@ -191,7 +217,7 @@ Authorization: Bearer <valid-token>
 
 **Status:** `200`
 
-**Server Logs:**
+**Server Logs (Development/Debug mode):**
 ```
 [apiProxy] Request method: GET
 [apiProxy] Path segments: ['123', 'templates']
@@ -203,6 +229,11 @@ Authorization: Bearer <valid-token>
 [apiProxy] Upstream response status: 200
 [apiProxy] Upstream response ok: true
 [apiProxy] Successful response, forwarding to client
+```
+
+**Server Logs (Production mode):**
+```
+(No logs unless DEBUG_API_PROXY=true)
 ```
 
 ## Testing Checklist
