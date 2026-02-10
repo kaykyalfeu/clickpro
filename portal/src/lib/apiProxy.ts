@@ -20,41 +20,116 @@ function buildUpstreamUrl(request: Request, pathSegments: string[]) {
 }
 
 export async function proxyToClickproApi(request: Request, pathSegments: string[]) {
-  const upstreamUrl = buildUpstreamUrl(request, pathSegments);
-  if (!upstreamUrl) {
+  try {
+    // Log request details for debugging
+    console.error('[apiProxy] Request method:', request.method);
+    console.error('[apiProxy] Path segments:', pathSegments);
+    console.error('[apiProxy] Request URL:', request.url);
+
+    // Validate path segments - extract clientId if present
+    const clientId = pathSegments.length > 0 ? pathSegments[0] : null;
+    console.error('[apiProxy] Client ID:', clientId);
+
+    if (!clientId) {
+      console.error('[apiProxy] ERROR: Missing client ID in path');
+      return new Response(
+        JSON.stringify({
+          error: "Client ID is required",
+          details: "The path must include a client ID: /api/clients/{id}/...",
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } },
+      );
+    }
+
+    const baseUrl = getUpstreamBaseUrl();
+    console.error('[apiProxy] Base URL:', baseUrl || '(not set)');
+
+    const upstreamUrl = buildUpstreamUrl(request, pathSegments);
+    if (!upstreamUrl) {
+      console.error('[apiProxy] ERROR: Failed to build upstream URL - CLICKPRO_API_URL not configured');
+      return new Response(
+        JSON.stringify({
+          error: "CLICKPRO_API_URL não configurado no servidor",
+          details: "Configure a variável de ambiente CLICKPRO_API_URL nas configurações do Vercel (Project Settings > Environment Variables).",
+        }),
+        { status: 500, headers: { "Content-Type": "application/json" } },
+      );
+    }
+
+    console.error('[apiProxy] Upstream URL:', upstreamUrl.toString());
+
+    const headers = new Headers(request.headers);
+    headers.delete("host");
+    headers.delete("content-length");
+    if (request.headers.get("host")) {
+      headers.set("x-forwarded-host", request.headers.get("host") as string);
+    }
+
+    const body = ["GET", "HEAD"].includes(request.method)
+      ? undefined
+      : await request.arrayBuffer();
+
+    console.error('[apiProxy] Sending request to upstream...');
+    const upstreamResponse = await fetch(upstreamUrl, {
+      method: request.method,
+      headers,
+      body,
+      redirect: "manual",
+    });
+
+    console.error('[apiProxy] Upstream response status:', upstreamResponse.status);
+    console.error('[apiProxy] Upstream response ok:', upstreamResponse.ok);
+
+    // If response is not ok, log the response body for debugging
+    if (!upstreamResponse.ok) {
+      const responseText = await upstreamResponse.text();
+      console.error('[apiProxy] Upstream error response body:', responseText);
+
+      // Try to parse as JSON, otherwise return as text
+      let errorData;
+      try {
+        errorData = JSON.parse(responseText);
+      } catch {
+        errorData = { error: "Upstream error", details: responseText };
+      }
+
+      return new Response(
+        JSON.stringify({
+          error: `Upstream API returned ${upstreamResponse.status}`,
+          details: errorData,
+          upstreamStatus: upstreamResponse.status,
+        }),
+        {
+          status: upstreamResponse.status,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+
+    const responseHeaders = new Headers(upstreamResponse.headers);
+    responseHeaders.delete("content-encoding");
+    responseHeaders.delete("transfer-encoding");
+
+    console.error('[apiProxy] Successful response, forwarding to client');
+    return new Response(upstreamResponse.body, {
+      status: upstreamResponse.status,
+      headers: responseHeaders,
+    });
+  } catch (error) {
+    // Catch any unexpected errors
+    console.error('[apiProxy] CRITICAL ERROR:', error);
+    console.error('[apiProxy] Error stack:', error instanceof Error ? error.stack : 'N/A');
+
     return new Response(
       JSON.stringify({
-        error:
-          "CLICKPRO_API_URL não configurado no servidor. Configure a variável de ambiente CLICKPRO_API_URL nas configurações do Vercel (Project Settings > Environment Variables).",
+        error: "Internal proxy error",
+        details: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
       }),
-      { status: 500, headers: { "Content-Type": "application/json" } },
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      },
     );
   }
-
-  const headers = new Headers(request.headers);
-  headers.delete("host");
-  headers.delete("content-length");
-  if (request.headers.get("host")) {
-    headers.set("x-forwarded-host", request.headers.get("host") as string);
-  }
-
-  const body = ["GET", "HEAD"].includes(request.method)
-    ? undefined
-    : await request.arrayBuffer();
-
-  const upstreamResponse = await fetch(upstreamUrl, {
-    method: request.method,
-    headers,
-    body,
-    redirect: "manual",
-  });
-
-  const responseHeaders = new Headers(upstreamResponse.headers);
-  responseHeaders.delete("content-encoding");
-  responseHeaders.delete("transfer-encoding");
-
-  return new Response(upstreamResponse.body, {
-    status: upstreamResponse.status,
-    headers: responseHeaders,
-  });
 }
