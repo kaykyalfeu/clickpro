@@ -2,12 +2,14 @@
 
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import LicenseStatus from "./LicenseStatus";
 import Brand from "./Brand";
 
 export default function DashboardHeader() {
   const { data: session } = useSession();
   const user = session?.user;
+  const pathname = usePathname();
 
   const handleSignOut = () => {
     signOut({ callbackUrl: "/" });
@@ -50,44 +52,72 @@ export default function DashboardHeader() {
             {user?.role === "SUPER_ADMIN" && (
               <Link
                 href="/admin"
-                className="text-sm px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 transition-colors"
+                className={`text-sm px-3 py-1.5 rounded-lg border transition-colors ${
+                  pathname === "/admin" || pathname.startsWith("/admin/")
+                    ? "bg-amber-500/30 text-amber-200 border-amber-400/60"
+                    : "bg-amber-500/20 text-amber-300 border-amber-500/30 hover:bg-amber-500/30"
+                }`}
               >
                 Admin
               </Link>
             )}
             <Link
               href="/"
-              className="text-sm text-slate-400 hover:text-white transition-colors"
+              className={`text-sm transition-colors ${
+                pathname === "/"
+                  ? "text-white font-semibold"
+                  : "text-slate-400 hover:text-white"
+              }`}
             >
               Home
             </Link>
             <Link
               href="/conversations"
-              className="text-sm text-slate-400 hover:text-white transition-colors"
+              className={`text-sm transition-colors ${
+                pathname === "/conversations" || pathname.startsWith("/conversations/")
+                  ? "text-white font-semibold"
+                  : "text-slate-400 hover:text-white"
+              }`}
             >
               Inbox
             </Link>
             <Link
               href="/credentials"
-              className="text-sm text-slate-400 hover:text-white transition-colors"
+              className={`text-sm transition-colors ${
+                pathname === "/credentials" || pathname.startsWith("/credentials/")
+                  ? "text-white font-semibold"
+                  : "text-slate-400 hover:text-white"
+              }`}
             >
               Credenciais
             </Link>
             <Link
               href="/templates"
-              className="text-sm text-slate-400 hover:text-white transition-colors"
+              className={`text-sm transition-colors ${
+                pathname === "/templates" || pathname.startsWith("/templates/")
+                  ? "text-white font-semibold"
+                  : "text-slate-400 hover:text-white"
+              }`}
             >
               Templates
             </Link>
             <Link
               href="/campaigns"
-              className="text-sm text-slate-400 hover:text-white transition-colors"
+              className={`text-sm transition-colors ${
+                pathname === "/campaigns" || pathname.startsWith("/campaigns/")
+                  ? "text-white font-semibold"
+                  : "text-slate-400 hover:text-white"
+              }`}
             >
               Campanhas
             </Link>
             <Link
               href="/contacts"
-              className="text-sm text-slate-400 hover:text-white transition-colors"
+              className={`text-sm transition-colors ${
+                pathname === "/contacts" || pathname.startsWith("/contacts/")
+                  ? "text-white font-semibold"
+                  : "text-slate-400 hover:text-white"
+              }`}
             >
               Contatos
             </Link>
