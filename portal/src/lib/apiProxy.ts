@@ -1,8 +1,8 @@
+const DEFAULT_UPSTREAM_URL = "https://clickpro.grupogarciaseguradoras.com.br";
+
 function getUpstreamBaseUrl() {
-  // CRITICAL: Only use server-side env var CLICKPRO_API_URL
-  // NEXT_PUBLIC_* variables are NOT available at runtime in API routes on Vercel
-  // They are bundled at build time and only accessible in client-side code
-  return process.env.CLICKPRO_API_URL || "";
+  // Use CLICKPRO_API_URL env var if set, otherwise fall back to hardcoded default
+  return process.env.CLICKPRO_API_URL || DEFAULT_UPSTREAM_URL;
 }
 
 function buildUpstreamUrl(request: Request, pathSegments: string[]) {
