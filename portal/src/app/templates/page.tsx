@@ -109,12 +109,16 @@ export default function TemplatesPage() {
 
   const fetchTemplates = useCallback(async function() {
     if (!baseUrl || !clientId || !token) return;
-    const response = await fetch(`${baseUrl}/api/clients/${clientId}/templates`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!response.ok) return;
-    const data = await response.json();
-    setTemplates(data.templates || []);
+    try {
+      const response = await fetch(`${baseUrl}/api/clients/${clientId}/templates`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) return;
+      const data = await response.json();
+      setTemplates(data.templates || []);
+    } catch {
+      // Network error - will retry on next interval
+    }
   }, [baseUrl, clientId, token]);
 
   useEffect(() => {
