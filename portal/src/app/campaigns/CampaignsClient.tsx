@@ -130,42 +130,53 @@ export default function CampaignsClient() {
 
   const fetchTemplates = useCallback(async function() {
     if (!baseUrl || !clientId || !token) return;
-    const response = await fetch(`${baseUrl}/api/clients/${clientId}/templates`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!response.ok) return;
-    const data = await response.json();
-    setTemplates(data.templates || []);
+    try {
+      const response = await fetch(`${baseUrl}/api/clients/${clientId}/templates`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) return;
+      const data = await response.json();
+      setTemplates(data.templates || []);
+    } catch {
+      // Network error - silent, will retry on next user action
+    }
   }, [baseUrl, clientId, token]);
 
   const fetchContacts = useCallback(async function() {
     if (!baseUrl || !clientId || !token) return;
-    const response = await fetch(
-      `${baseUrl}/api/clients/${clientId}/contacts?search=${encodeURIComponent(search)}`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      },
-    );
-    if (!response.ok) return;
-    const data = await response.json();
-    setContacts(data.contacts || []);
+    try {
+      const response = await fetch(
+        `${baseUrl}/api/clients/${clientId}/contacts?search=${encodeURIComponent(search)}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      if (!response.ok) return;
+      const data = await response.json();
+      setContacts(data.contacts || []);
+    } catch {
+      // Network error - silent, will retry on next search change
+    }
   }, [baseUrl, clientId, token, search]);
 
   const fetchCampaigns = useCallback(async function() {
     if (!baseUrl || !clientId || !token) return;
-    const response = await fetch(`${baseUrl}/api/clients/${clientId}/campaigns`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!response.ok) return;
-    const data = await response.json();
-    setCampaigns(data.campaigns || []);
+    try {
+      const response = await fetch(`${baseUrl}/api/clients/${clientId}/campaigns`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) return;
+      const data = await response.json();
+      setCampaigns(data.campaigns || []);
+    } catch {
+      // Network error - silent, will retry on next user action
+    }
   }, [baseUrl, clientId, token]);
 
   useEffect(() => {
     fetchTemplates();
-    fetchContacts();
     fetchCampaigns();
-  }, [fetchTemplates, fetchContacts, fetchCampaigns]);
+  }, [fetchTemplates, fetchCampaigns]);
 
   useEffect(() => {
     const timeout = setTimeout(fetchContacts, 300);

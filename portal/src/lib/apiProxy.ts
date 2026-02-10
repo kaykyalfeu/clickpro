@@ -68,6 +68,26 @@ export async function proxyToClickproApi(request: Request, pathSegments: string[
       console.log('[apiProxy] Upstream URL:', upstreamUrl.toString());
     }
 
+    // Detect self-referencing loop: if upstream host matches request host,
+    // the proxy would call itself infinitely, causing HTTP 508
+    const requestHost = request.headers.get("host") || "";
+    if (requestHost && upstreamUrl.host === requestHost) {
+      console.error(
+        '[apiProxy] LOOP DETECTED: Upstream URL host matches request host:',
+        upstreamUrl.host,
+        '- CLICKPRO_API_URL must point to the external WhatsApp Integration API, not to this portal.',
+      );
+      return new Response(
+        JSON.stringify({
+          error: "Loop detected: CLICKPRO_API_URL points to this application",
+          details:
+            "Configure CLICKPRO_API_URL to point to the WhatsApp Integration API server (e.g., http://localhost:3001), not to this portal. " +
+            "Current upstream: " + upstreamUrl.origin,
+        }),
+        { status: 508, headers: { "Content-Type": "application/json" } },
+      );
+    }
+
     const headers = new Headers(request.headers);
     headers.delete("host");
     headers.delete("content-length");
