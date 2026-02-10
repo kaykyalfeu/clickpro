@@ -32,6 +32,7 @@ model User {
   updatedAt    DateTime @updatedAt
 
   memberships  ClientMember[]
+  proposals    ProposalDocument[]
 }
 
 model Client {
@@ -85,4 +86,27 @@ model LicenseValidationLog {
   createdAt   DateTime @default(now())
 
   license     License? @relation(fields: [licenseId], references: [id])
+}
+
+enum ProposalStatus {
+  PENDING
+  SENT
+  ACCEPTED
+  REJECTED
+}
+
+model ProposalDocument {
+  id          String          @id @default(cuid())
+  userId      String
+  fileName    String
+  fileSize    Int
+  fileType    String
+  fileUrl     String?         // URL if stored externally, null if base64
+  fileData    String?         // base64 data for simple storage
+  leadId      String?         // Optional reference to a lead
+  status      ProposalStatus  @default(PENDING)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  user        User            @relation(fields: [userId], references: [id])
 }
