@@ -1,5 +1,10 @@
 function getUpstreamBaseUrl() {
-  return process.env.CLICKPRO_API_URL || "";
+  return (
+    process.env.CLICKPRO_API_URL
+    || process.env.NEXT_PUBLIC_CLICKPRO_API_URL
+    || process.env.NEXT_PUBLIC_API_BASE_URL
+    || ""
+  );
 }
 
 function buildUpstreamUrl(request: Request, pathSegments: string[]) {
@@ -21,7 +26,8 @@ export async function proxyToClickproApi(request: Request, pathSegments: string[
   if (!upstreamUrl) {
     return new Response(
       JSON.stringify({
-        error: "CLICKPRO_API_URL não configurado no servidor.",
+        error:
+          "CLICKPRO_API_URL não configurado no servidor. Configure CLICKPRO_API_URL (ou NEXT_PUBLIC_API_BASE_URL/NEXT_PUBLIC_CLICKPRO_API_URL como fallback).",
       }),
       { status: 500, headers: { "Content-Type": "application/json" } },
     );
