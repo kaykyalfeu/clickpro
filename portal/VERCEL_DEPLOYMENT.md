@@ -8,6 +8,27 @@ The API proxy at `/api/clients/[...path]` was failing in production with 500 err
 ### Solution
 The proxy now uses only `CLICKPRO_API_URL` (server-side environment variable) which is available at runtime in Vercel serverless functions.
 
+### Architecture Overview
+
+The portal uses a **server-side proxy pattern** for API calls:
+
+```
+Client (Browser)
+    ↓ fetch("/api/clients/.../templates")
+Next.js Proxy (/api/clients/[...path]/route.ts)
+    ↓ reads CLICKPRO_API_URL from server env
+    ↓ proxies to ${CLICKPRO_API_URL}/api/clients/.../templates
+ClickPro API (WhatsApp Integration)
+```
+
+**Benefits:**
+- Client code doesn't need to know the upstream API URL
+- API credentials never exposed to the browser
+- Simplified CORS handling
+- Single point of configuration (CLICKPRO_API_URL)
+
+**Note:** Client-side pages may reference `NEXT_PUBLIC_CLICKPRO_API_URL` but when this is not set (recommended), they default to using relative URLs like `/api/clients/...` which automatically use the proxy.
+
 ## Vercel Deployment Steps
 
 ### 1. Configure Environment Variables
