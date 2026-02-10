@@ -31,7 +31,7 @@ export async function proxyToClickproApi(request: Request, pathSegments: string[
     }
 
     // Validate path segments - extract clientId if present
-    const clientId = pathSegments.length > 0 ? pathSegments[0]?.trim() : null;
+    const clientId = pathSegments.length > 0 ? pathSegments[0].trim() : null;
     if (isDevelopment || process.env.DEBUG_API_PROXY === 'true') {
       console.log('[apiProxy] Client ID:', clientId);
     }

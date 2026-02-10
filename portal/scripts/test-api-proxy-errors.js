@@ -86,7 +86,7 @@ async function runTests() {
   console.log('\nCheck server logs for detailed [apiProxy] messages.');
 }
 
-if (require.main === module) {
+if (typeof require !== 'undefined' && require.main === module) {
   runTests().catch(console.error);
 }
 

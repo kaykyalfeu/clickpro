@@ -300,8 +300,9 @@ Based on the implementation, the 500 error could have been caused by:
 
 ## Additional Notes
 
-- All errors are logged with `console.error` to ensure they appear in server logs
+- Critical errors (validation failures, configuration issues, upstream errors) are always logged with `console.error` regardless of mode
+- Debug information (request details, URLs, success responses) uses `console.log` and is only enabled in development or with `DEBUG_API_PROXY=true`
 - Error responses always include `Content-Type: application/json`
-- Stack traces are only included in critical errors to aid debugging
+- Stack traces are only included in development mode responses, but always logged server-side for debugging
 - The proxy preserves the original status code from the upstream API when possible
 - Authorization headers are forwarded to the upstream API
