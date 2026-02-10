@@ -1,10 +1,8 @@
 function getUpstreamBaseUrl() {
-  return (
-    process.env.CLICKPRO_API_URL
-    || process.env.NEXT_PUBLIC_CLICKPRO_API_URL
-    || process.env.NEXT_PUBLIC_API_BASE_URL
-    || ""
-  );
+  // CRITICAL: Only use server-side env var CLICKPRO_API_URL
+  // NEXT_PUBLIC_* variables are NOT available at runtime in API routes on Vercel
+  // They are bundled at build time and only accessible in client-side code
+  return process.env.CLICKPRO_API_URL || "";
 }
 
 function buildUpstreamUrl(request: Request, pathSegments: string[]) {
@@ -27,7 +25,7 @@ export async function proxyToClickproApi(request: Request, pathSegments: string[
     return new Response(
       JSON.stringify({
         error:
-          "CLICKPRO_API_URL não configurado no servidor. Configure CLICKPRO_API_URL (ou NEXT_PUBLIC_API_BASE_URL/NEXT_PUBLIC_CLICKPRO_API_URL como fallback).",
+          "CLICKPRO_API_URL não configurado no servidor. Configure a variável de ambiente CLICKPRO_API_URL nas configurações do Vercel (Project Settings > Environment Variables).",
       }),
       { status: 500, headers: { "Content-Type": "application/json" } },
     );
