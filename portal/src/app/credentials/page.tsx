@@ -121,6 +121,14 @@ export default function CredentialsPage() {
   async function saveOpenAi() {
     setFeedback(null);
     setError(null);
+    if (!clientId.trim() || !token.trim()) {
+      setError("Ative sua licença primeiro. Client ID e Token são obrigatórios.");
+      return;
+    }
+    if (!openaiKey.trim() && !status.openaiSet) {
+      setError("Informe a API Key da OpenAI.");
+      return;
+    }
     setSavingOpenai(true);
     try {
       const response = await fetch(`${baseUrl}/api/clients/${clientId}/credentials/openai`, {
@@ -149,6 +157,18 @@ export default function CredentialsPage() {
   async function saveWhatsApp() {
     setFeedback(null);
     setError(null);
+    if (!clientId.trim() || !token.trim()) {
+      setError("Ative sua licença primeiro. Client ID e Token são obrigatórios.");
+      return;
+    }
+    if (!metaToken.trim() && !status.whatsappSet) {
+      setError("Informe o Access Token do WhatsApp.");
+      return;
+    }
+    if (!businessId.trim()) {
+      setError("Informe o Business ID da Meta.");
+      return;
+    }
     setSavingWhatsapp(true);
     try {
       const response = await fetch(`${baseUrl}/api/clients/${clientId}/credentials/whatsapp`, {
@@ -178,6 +198,10 @@ export default function CredentialsPage() {
   async function saveLimits() {
     setFeedback(null);
     setError(null);
+    if (!clientId.trim() || !token.trim()) {
+      setError("Ative sua licença primeiro. Client ID e Token são obrigatórios.");
+      return;
+    }
     setSavingLimits(true);
     try {
       const response = await fetch(`${baseUrl}/api/clients/${clientId}/limits`, {
@@ -204,6 +228,14 @@ export default function CredentialsPage() {
   async function fetchMetaTier() {
     setFeedback(null);
     setError(null);
+    if (!clientId.trim() || !token.trim()) {
+      setError("Ative sua licença primeiro. Client ID e Token são obrigatórios.");
+      return;
+    }
+    if (!businessId.trim()) {
+      setError("Informe o Business ID para buscar o tier.");
+      return;
+    }
     setFetchingTier(true);
     try {
       const response = await fetch(`${baseUrl}/api/clients/${clientId}/meta/tiers`, {

@@ -1,7 +1,22 @@
 const DEFAULT_UPSTREAM_URL = "https://clickpro.grupogarciaseguradoras.com.br";
 
+/** Hostnames and IP patterns that must never be used as upstream targets. */
+const BLOCKED_HOST_PATTERNS = [
+  /^localhost$/i,
+  /^127\.\d+\.\d+\.\d+$/,
+  /^10\.\d+\.\d+\.\d+$/,
+  /^172\.(1[6-9]|2\d|3[01])\.\d+\.\d+$/,
+  /^192\.168\.\d+\.\d+$/,
+  /^0\.0\.0\.0$/,
+  /^\[::1?\]$/,
+];
+
+function isBlockedHost(hostname: string): boolean {
+  const clean = hostname.replace(/:\d+$/, ""); // strip port
+  return BLOCKED_HOST_PATTERNS.some((re) => re.test(clean));
+}
+
 function getUpstreamBaseUrl() {
-  // Use CLICKPRO_API_URL env var if set, otherwise fall back to hardcoded default
   return process.env.CLICKPRO_API_URL || DEFAULT_UPSTREAM_URL;
 }
 
@@ -19,20 +34,35 @@ function buildUpstreamUrl(request: Request, pathSegments: string[]) {
   return upstreamUrl;
 }
 
+function isNetworkError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const msg = error.message.toLowerCase();
+  return (
+    msg.includes("econnrefused") ||
+    msg.includes("enotfound") ||
+    msg.includes("etimedout") ||
+    msg.includes("econnreset") ||
+    msg.includes("ehostunreach") ||
+    msg.includes("fetch failed") ||
+    msg.includes("network") ||
+    msg.includes("socket hang up")
+  );
+}
+
 export async function proxyToClickproApi(request: Request, pathSegments: string[]) {
   const isDevelopment = process.env.NODE_ENV === 'development';
-  
+  const debug = isDevelopment || process.env.DEBUG_API_PROXY === 'true';
+
   try {
-    // Log request details for debugging (only in development or when debug is enabled)
-    if (isDevelopment || process.env.DEBUG_API_PROXY === 'true') {
+    if (debug) {
       console.log('[apiProxy] Request method:', request.method);
       console.log('[apiProxy] Path segments:', pathSegments);
       console.log('[apiProxy] Request URL:', request.url);
     }
 
-    // Validate path segments - extract clientId if present
+    // --- 1. Validate clientId in path ---
     const clientId = pathSegments.length > 0 ? pathSegments[0].trim() : null;
-    if (isDevelopment || process.env.DEBUG_API_PROXY === 'true') {
+    if (debug) {
       console.log('[apiProxy] Client ID:', clientId);
     }
 
@@ -47,29 +77,55 @@ export async function proxyToClickproApi(request: Request, pathSegments: string[
       );
     }
 
+    // --- 2. Validate Authorization header ---
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      console.error('[apiProxy] ERROR: Missing or invalid Authorization header');
+      return new Response(
+        JSON.stringify({
+          error: "Autorização necessária",
+          details: "Ative sua licença para obter um token JWT válido antes de salvar credenciais.",
+        }),
+        { status: 401, headers: { "Content-Type": "application/json" } },
+      );
+    }
+
+    // --- 3. Resolve upstream URL ---
     const baseUrl = getUpstreamBaseUrl();
-    if (isDevelopment || process.env.DEBUG_API_PROXY === 'true') {
-      console.log('[apiProxy] Base URL:', baseUrl || '(not set)');
+    if (debug) {
+      console.log('[apiProxy] CLICKPRO_API_URL:', baseUrl || '(not set)');
     }
 
     const upstreamUrl = buildUpstreamUrl(request, pathSegments);
     if (!upstreamUrl) {
-      console.error('[apiProxy] ERROR: Failed to build upstream URL - CLICKPRO_API_URL not configured');
+      console.error('[apiProxy] ERROR: CLICKPRO_API_URL not configured');
       return new Response(
         JSON.stringify({
-          error: "CLICKPRO_API_URL não configurado no servidor",
+          error: "CLICKPRO_API_URL not configured",
           details: "Configure a variável de ambiente CLICKPRO_API_URL nas configurações do Vercel (Project Settings > Environment Variables).",
         }),
-        { status: 500, headers: { "Content-Type": "application/json" } },
+        { status: 503, headers: { "Content-Type": "application/json" } },
       );
     }
 
-    if (isDevelopment || process.env.DEBUG_API_PROXY === 'true') {
-      console.log('[apiProxy] Upstream URL:', upstreamUrl.toString());
+    // --- 4. Block private/localhost upstream targets ---
+    if (isBlockedHost(upstreamUrl.hostname)) {
+      console.error(
+        '[apiProxy] BLOCKED: Upstream URL points to a private/localhost address:',
+        upstreamUrl.hostname,
+      );
+      return new Response(
+        JSON.stringify({
+          error: "CLICKPRO_API_URL aponta para um endereço privado/localhost",
+          details:
+            "Configure CLICKPRO_API_URL com a URL pública do backend (ex: https://api.clickpro.com). " +
+            "Endereço atual: " + upstreamUrl.origin,
+        }),
+        { status: 503, headers: { "Content-Type": "application/json" } },
+      );
     }
 
-    // Detect self-referencing loop: if upstream host matches request host,
-    // the proxy would call itself infinitely, causing HTTP 508
+    // --- 5. Detect self-referencing loop ---
     const requestHost = request.headers.get("host") || "";
     if (requestHost && upstreamUrl.host === requestHost) {
       console.error(
@@ -81,13 +137,18 @@ export async function proxyToClickproApi(request: Request, pathSegments: string[
         JSON.stringify({
           error: "Loop detected: CLICKPRO_API_URL points to this application",
           details:
-            "Configure CLICKPRO_API_URL to point to the WhatsApp Integration API server (e.g., http://localhost:3001), not to this portal. " +
+            "Configure CLICKPRO_API_URL to point to the WhatsApp Integration API server (e.g., https://api.clickpro.com), not to this portal. " +
             "Current upstream: " + upstreamUrl.origin,
         }),
         { status: 508, headers: { "Content-Type": "application/json" } },
       );
     }
 
+    if (debug) {
+      console.log('[apiProxy] Upstream URL:', upstreamUrl.toString());
+    }
+
+    // --- 6. Forward request ---
     const headers = new Headers(request.headers);
     headers.delete("host");
     headers.delete("content-length");
@@ -99,10 +160,10 @@ export async function proxyToClickproApi(request: Request, pathSegments: string[
       ? undefined
       : await request.arrayBuffer();
 
-    if (isDevelopment || process.env.DEBUG_API_PROXY === 'true') {
+    if (debug) {
       console.log('[apiProxy] Sending request to upstream...');
     }
-    
+
     const upstreamResponse = await fetch(upstreamUrl, {
       method: request.method,
       headers,
@@ -110,17 +171,15 @@ export async function proxyToClickproApi(request: Request, pathSegments: string[
       redirect: "manual",
     });
 
-    if (isDevelopment || process.env.DEBUG_API_PROXY === 'true') {
+    if (debug) {
       console.log('[apiProxy] Upstream response status:', upstreamResponse.status);
-      console.log('[apiProxy] Upstream response ok:', upstreamResponse.ok);
     }
 
-    // If response is not ok, log the response body for debugging
+    // --- 7. Handle upstream errors ---
     if (!upstreamResponse.ok) {
       const responseText = await upstreamResponse.text();
-      console.error('[apiProxy] Upstream error response body:', responseText);
+      console.error('[apiProxy] Upstream error response:', upstreamResponse.status, responseText);
 
-      // Try to parse as JSON, otherwise return as text
       let errorData;
       try {
         errorData = JSON.parse(responseText);
@@ -141,28 +200,43 @@ export async function proxyToClickproApi(request: Request, pathSegments: string[
       );
     }
 
+    // --- 8. Forward successful response ---
     const responseHeaders = new Headers(upstreamResponse.headers);
     responseHeaders.delete("content-encoding");
     responseHeaders.delete("transfer-encoding");
 
-    if (isDevelopment || process.env.DEBUG_API_PROXY === 'true') {
+    if (debug) {
       console.log('[apiProxy] Successful response, forwarding to client');
     }
-    
+
     return new Response(upstreamResponse.body, {
       status: upstreamResponse.status,
       headers: responseHeaders,
     });
   } catch (error) {
-    // Catch any unexpected errors - always log these as they indicate real problems
     console.error('[apiProxy] CRITICAL ERROR:', error);
-    console.error('[apiProxy] Error stack:', error instanceof Error ? error.stack : 'N/A');
+
+    // Differentiate network errors from other errors
+    if (isNetworkError(error)) {
+      console.error('[apiProxy] Network error — backend may be down or unreachable');
+      return new Response(
+        JSON.stringify({
+          error: "Cannot reach backend",
+          details:
+            "Não foi possível conectar ao backend ClickPro. Verifique se o servidor está rodando e acessível. " +
+            "Endpoint: " + getUpstreamBaseUrl(),
+        }),
+        {
+          status: 503,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
 
     return new Response(
       JSON.stringify({
         error: "Internal proxy error",
         details: error instanceof Error ? error.message : String(error),
-        // Only include stack trace in development to avoid leaking sensitive information
         ...(isDevelopment && { stack: error instanceof Error ? error.stack : undefined }),
       }),
       {
