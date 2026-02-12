@@ -1,4 +1,4 @@
-const DEFAULT_UPSTREAM_URL = "https://clickpro.grupogarciaseguradoras.com.br";
+const DEFAULT_UPSTREAM_URL = "";
 
 /** Hostnames and IP patterns that must never be used as upstream targets. */
 const BLOCKED_HOST_PATTERNS = [
@@ -127,7 +127,9 @@ export async function proxyToClickproApi(request: Request, pathSegments: string[
 
     // --- 5. Detect self-referencing loop ---
     const requestHost = request.headers.get("host") || "";
-    if (requestHost && upstreamUrl.host === requestHost) {
+    const forwardedHost = request.headers.get("x-forwarded-host") || "";
+    const hostsToCheck = [requestHost, forwardedHost].filter(Boolean);
+    if (hostsToCheck.some((h) => upstreamUrl.host === h)) {
       console.error(
         '[apiProxy] LOOP DETECTED: Upstream URL host matches request host:',
         upstreamUrl.host,
