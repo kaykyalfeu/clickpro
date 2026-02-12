@@ -1,5 +1,7 @@
 const DEFAULT_UPSTREAM_URL = "";
 
+const PROXY_HEADER = "x-clickpro-proxy";
+
 /** Hostnames and IP patterns that must never be used as upstream targets. */
 const BLOCKED_HOST_PATTERNS = [
   /^localhost$/i,
@@ -18,6 +20,19 @@ function isBlockedHost(hostname: string): boolean {
 
 function getUpstreamBaseUrl() {
   return process.env.CLICKPRO_API_URL || DEFAULT_UPSTREAM_URL;
+}
+
+/** Collect all hostnames known to belong to this application. */
+function getSelfHosts(request: Request): string[] {
+  const hosts: string[] = [];
+  const reqHost = request.headers.get("host");
+  if (reqHost) hosts.push(reqHost);
+  const fwdHost = request.headers.get("x-forwarded-host");
+  if (fwdHost) hosts.push(fwdHost);
+  if (process.env.VERCEL_URL) hosts.push(process.env.VERCEL_URL);
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) hosts.push(process.env.VERCEL_PROJECT_PRODUCTION_URL);
+  if (process.env.VERCEL_BRANCH_URL) hosts.push(process.env.VERCEL_BRANCH_URL);
+  return hosts.filter(Boolean);
 }
 
 function buildUpstreamUrl(request: Request, pathSegments: string[]) {
@@ -126,13 +141,24 @@ export async function proxyToClickproApi(request: Request, pathSegments: string[
     }
 
     // --- 5. Detect self-referencing loop ---
-    const requestHost = request.headers.get("host") || "";
-    const forwardedHost = request.headers.get("x-forwarded-host") || "";
-    const hostsToCheck = [requestHost, forwardedHost].filter(Boolean);
-    if (hostsToCheck.some((h) => upstreamUrl.host === h)) {
+    if (request.headers.get(PROXY_HEADER)) {
+      console.error('[apiProxy] LOOP DETECTED: request already passed through this proxy');
+      return new Response(
+        JSON.stringify({
+          error: "Loop detected: request already proxied",
+          details:
+            "Configure CLICKPRO_API_URL to point to the WhatsApp Integration API server, not to this portal.",
+        }),
+        { status: 508, headers: { "Content-Type": "application/json" } },
+      );
+    }
+
+    const selfHosts = getSelfHosts(request);
+    if (selfHosts.some((h) => upstreamUrl.host === h)) {
       console.error(
-        '[apiProxy] LOOP DETECTED: Upstream URL host matches request host:',
+        '[apiProxy] LOOP DETECTED: Upstream URL host matches a known self-host:',
         upstreamUrl.host,
+        '| known self-hosts:', selfHosts,
         '- CLICKPRO_API_URL must point to the external WhatsApp Integration API, not to this portal.',
       );
       return new Response(
@@ -154,6 +180,7 @@ export async function proxyToClickproApi(request: Request, pathSegments: string[
     const headers = new Headers(request.headers);
     headers.delete("host");
     headers.delete("content-length");
+    headers.set(PROXY_HEADER, "1");
     if (request.headers.get("host")) {
       headers.set("x-forwarded-host", request.headers.get("host") as string);
     }
@@ -166,12 +193,41 @@ export async function proxyToClickproApi(request: Request, pathSegments: string[
       console.log('[apiProxy] Sending request to upstream...');
     }
 
-    const upstreamResponse = await fetch(upstreamUrl, {
+    let upstreamResponse = await fetch(upstreamUrl, {
       method: request.method,
       headers,
       body,
-      redirect: "follow",
+      redirect: "manual",
     });
+
+    // --- 6b. Follow redirect once if target is not self ---
+    if ([301, 302, 307, 308].includes(upstreamResponse.status)) {
+      const location = upstreamResponse.headers.get("location");
+      if (location) {
+        const redirectUrl = new URL(location, upstreamUrl);
+        if (selfHosts.some((h) => redirectUrl.host === h)) {
+          console.error('[apiProxy] LOOP DETECTED via redirect to self:', redirectUrl.host);
+          return new Response(
+            JSON.stringify({
+              error: "Loop detected: upstream redirected back to this application",
+              details:
+                "CLICKPRO_API_URL upstream is redirecting to this portal. " +
+                "Configure CLICKPRO_API_URL to point directly to the backend API server.",
+            }),
+            { status: 508, headers: { "Content-Type": "application/json" } },
+          );
+        }
+        if (debug) {
+          console.log('[apiProxy] Following redirect to:', redirectUrl.toString());
+        }
+        upstreamResponse = await fetch(redirectUrl, {
+          method: request.method,
+          headers,
+          body,
+          redirect: "manual",
+        });
+      }
+    }
 
     if (debug) {
       console.log('[apiProxy] Upstream response status:', upstreamResponse.status);

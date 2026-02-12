@@ -29,12 +29,22 @@ function getInitialTheme(): Theme {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(getInitialTheme);
+  const [theme, setThemeState] = useState<Theme>("light");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    const resolved: Theme =
+      stored === "light" || stored === "dark" ? stored : getSystemTheme();
+    setThemeState(resolved);
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
     document.documentElement.setAttribute("data-theme", theme);
     document.documentElement.classList.toggle("dark", theme === "dark");
-  }, [theme]);
+  }, [theme, mounted]);
 
   const setTheme = useCallback((nextTheme: Theme) => {
     setThemeState(nextTheme);

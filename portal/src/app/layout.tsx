@@ -16,9 +16,11 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" data-theme="light" suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
         <link
           rel="stylesheet"
-          href="https://unpkg.com/akar-icons-fonts@1.1.2/dist/css/akar-icons.css"
+          href="https://cdn.jsdelivr.net/npm/akar-icons-fonts@1.1.2/dist/css/akar-icons.css"
+          crossOrigin="anonymous"
         />
       </head>
       <body className="antialiased font-sans">
