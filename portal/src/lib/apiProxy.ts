@@ -170,7 +170,7 @@ export async function proxyToClickproApi(request: Request, pathSegments: string[
       method: request.method,
       headers,
       body,
-      redirect: "manual",
+      redirect: "follow",
     });
 
     if (debug) {
