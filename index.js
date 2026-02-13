@@ -485,6 +485,40 @@ const server = http.createServer((req, res) => {
   const parsedUrl = url.parse(req.url, true);
   const path = parsedUrl.pathname.replace(/^\/+|\/+$/g, '');
 
+  // --- CORS: allow portal to make cross-origin requests ---
+  const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').map(o => o.trim()).filter(Boolean);
+  const origin = req.headers.origin || '';
+  if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-request-id, x-forwarded-host');
+    res.setHeader('Access-Control-Max-Age', '86400');
+  }
+
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
+  // --- Health check ---
+  if (req.method === 'GET' && (path === 'api/health' || path === 'health')) {
+    const userCount = db.prepare('SELECT COUNT(*) as total FROM users').get();
+    const clientCount = db.prepare('SELECT COUNT(*) as total FROM clients').get();
+    sendJson(res, 200, {
+      status: 'ok',
+      service: 'clickpro-backend',
+      timestamp: nowIso(),
+      database: 'sqlite',
+      counts: {
+        users: userCount?.total || 0,
+        clients: clientCount?.total || 0,
+      },
+    });
+    return;
+  }
+
   // Servir a interface de chat em /
   if (req.method === 'GET' && path === '') {
     try {

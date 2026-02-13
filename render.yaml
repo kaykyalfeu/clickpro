@@ -1,0 +1,29 @@
+# Render Blueprint — One-click deploy for ClickPro Backend
+# https://render.com/docs/blueprint-spec
+#
+# Deploy: click "New" > "Blueprint" > connect this repo
+# Or: render blueprint launch
+
+services:
+  - type: web
+    name: clickpro-backend
+    runtime: node
+    plan: starter
+    buildCommand: npm ci --production
+    startCommand: node index.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3001"
+      - key: ALLOWED_ORIGINS
+        value: https://clickpro.grupogarciaseguradoras.com.br
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SECRET_KEY
+        generateValue: true
+    disk:
+      name: clickpro-data
+      mountPath: /data
+      sizeGB: 1

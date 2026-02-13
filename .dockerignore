@@ -1,0 +1,5 @@
+node_modules
+portal
+.git
+*.md
+.github
