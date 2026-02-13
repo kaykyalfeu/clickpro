@@ -128,59 +128,68 @@ export default function CampaignsClient() {
     }
   }
 
-  const fetchTemplates = useCallback(async function() {
+  const fetchTemplates = useCallback(async function(signal?: AbortSignal) {
     if (!baseUrl || !clientId || !token) return;
     try {
       const response = await fetch(`${baseUrl}/api/clients/${clientId}/templates`, {
         headers: { Authorization: `Bearer ${token}` },
+        signal,
       });
       if (!response.ok) return;
       const data = await response.json();
       setTemplates(data.templates || []);
-    } catch {
-      // Network error - silent, will retry on next user action
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
     }
   }, [baseUrl, clientId, token]);
 
-  const fetchContacts = useCallback(async function() {
+  const fetchContacts = useCallback(async function(signal?: AbortSignal) {
     if (!baseUrl || !clientId || !token) return;
     try {
       const response = await fetch(
         `${baseUrl}/api/clients/${clientId}/contacts?search=${encodeURIComponent(search)}`,
         {
           headers: { Authorization: `Bearer ${token}` },
+          signal,
         },
       );
       if (!response.ok) return;
       const data = await response.json();
       setContacts(data.contacts || []);
-    } catch {
-      // Network error - silent, will retry on next search change
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
     }
   }, [baseUrl, clientId, token, search]);
 
-  const fetchCampaigns = useCallback(async function() {
+  const fetchCampaigns = useCallback(async function(signal?: AbortSignal) {
     if (!baseUrl || !clientId || !token) return;
     try {
       const response = await fetch(`${baseUrl}/api/clients/${clientId}/campaigns`, {
         headers: { Authorization: `Bearer ${token}` },
+        signal,
       });
       if (!response.ok) return;
       const data = await response.json();
       setCampaigns(data.campaigns || []);
-    } catch {
-      // Network error - silent, will retry on next user action
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
     }
   }, [baseUrl, clientId, token]);
 
   useEffect(() => {
-    fetchTemplates();
-    fetchCampaigns();
+    const controller = new AbortController();
+    fetchTemplates(controller.signal);
+    fetchCampaigns(controller.signal);
+    return () => controller.abort();
   }, [fetchTemplates, fetchCampaigns]);
 
   useEffect(() => {
-    const timeout = setTimeout(fetchContacts, 300);
-    return () => clearTimeout(timeout);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => fetchContacts(controller.signal), 300);
+    return () => {
+      clearTimeout(timeout);
+      controller.abort();
+    };
   }, [fetchContacts]);
 
   const approvedTemplates = useMemo(

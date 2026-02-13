@@ -102,20 +102,27 @@ export default function CredentialsPage() {
     }
   }
 
-  const fetchStatus = useCallback(async function() {
+  const fetchStatus = useCallback(async function(signal?: AbortSignal) {
     if (!baseUrl || !clientId || !token) return;
-    const response = await fetch(`${baseUrl}/api/clients/${clientId}/credentials/status`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!response.ok) return;
-    const data = await response.json();
-    setStatus({ openaiSet: data.openaiSet, whatsappSet: data.whatsappSet });
-    if (data.aiDailyLimit) setAiDailyLimit(String(data.aiDailyLimit));
-    if (data.metaTierLimit) setMetaTierLimit(String(data.metaTierLimit));
+    try {
+      const response = await fetch(`${baseUrl}/api/clients/${clientId}/credentials/status`, {
+        headers: { Authorization: `Bearer ${token}` },
+        signal,
+      });
+      if (!response.ok) return;
+      const data = await response.json();
+      setStatus({ openaiSet: data.openaiSet, whatsappSet: data.whatsappSet });
+      if (data.aiDailyLimit) setAiDailyLimit(String(data.aiDailyLimit));
+      if (data.metaTierLimit) setMetaTierLimit(String(data.metaTierLimit));
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+    }
   }, [baseUrl, clientId, token]);
 
   useEffect(() => {
-    fetchStatus();
+    const controller = new AbortController();
+    fetchStatus(controller.signal);
+    return () => controller.abort();
   }, [fetchStatus]);
 
   async function saveOpenAi() {

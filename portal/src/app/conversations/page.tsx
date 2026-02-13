@@ -115,7 +115,7 @@ export default function ConversationsPage() {
     }
   }
 
-  const fetchConversations = useCallback(async function() {
+  const fetchConversations = useCallback(async function(signal?: AbortSignal) {
     if (!baseUrl || !clientId || !token) {
       return;
     }
@@ -126,6 +126,7 @@ export default function ConversationsPage() {
         `${baseUrl}/api/clients/${clientId}/conversations?search=${encodeURIComponent(search)}`,
         {
           headers: { Authorization: `Bearer ${token}` },
+          signal,
         },
       );
       if (!response.ok) {
@@ -134,13 +135,14 @@ export default function ConversationsPage() {
       const data = await response.json();
       setConversations(data.conversations || []);
     } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
       setError(err instanceof Error ? err.message : "Erro ao carregar conversas.");
     } finally {
       setLoading(false);
     }
   }, [baseUrl, clientId, token, search]);
 
-  const fetchMessages = useCallback(async function(phone: string) {
+  const fetchMessages = useCallback(async function(phone: string, signal?: AbortSignal) {
     if (!baseUrl || !clientId || !token) {
       return;
     }
@@ -151,6 +153,7 @@ export default function ConversationsPage() {
         `${baseUrl}/api/clients/${clientId}/messages?phone=${encodeURIComponent(phone)}`,
         {
           headers: { Authorization: `Bearer ${token}` },
+          signal,
         },
       );
       if (!response.ok) {
@@ -159,6 +162,7 @@ export default function ConversationsPage() {
       const data = await response.json();
       setMessages(data.messages || []);
     } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
       setError(err instanceof Error ? err.message : "Erro ao carregar mensagens.");
     } finally {
       setLoading(false);
@@ -193,16 +197,21 @@ export default function ConversationsPage() {
   }
 
   useEffect(() => {
+    const controller = new AbortController();
     const timeout = setTimeout(() => {
-      fetchConversations();
+      fetchConversations(controller.signal);
     }, 350);
-    return () => clearTimeout(timeout);
+    return () => {
+      clearTimeout(timeout);
+      controller.abort();
+    };
   }, [fetchConversations]);
 
   useEffect(() => {
-    if (selectedPhone) {
-      fetchMessages(selectedPhone);
-    }
+    if (!selectedPhone) return;
+    const controller = new AbortController();
+    fetchMessages(selectedPhone, controller.signal);
+    return () => controller.abort();
   }, [selectedPhone, fetchMessages]);
 
   const filteredMessages = useMemo(() => {
