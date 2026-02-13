@@ -1,5 +1,7 @@
 import { proxyToClickproApi } from "@/lib/apiProxy";
 
+export const runtime = "nodejs";
+
 export async function GET(
   request: Request,
   context: { params: Promise<{ path?: string[] }> },

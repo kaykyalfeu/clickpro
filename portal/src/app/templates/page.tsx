@@ -107,24 +107,29 @@ export default function TemplatesPage() {
     }
   }
 
-  const fetchTemplates = useCallback(async function() {
+  const fetchTemplates = useCallback(async function(signal?: AbortSignal) {
     if (!baseUrl || !clientId || !token) return;
     try {
       const response = await fetch(`${baseUrl}/api/clients/${clientId}/templates`, {
         headers: { Authorization: `Bearer ${token}` },
+        signal,
       });
       if (!response.ok) return;
       const data = await response.json();
       setTemplates(data.templates || []);
-    } catch {
-      // Network error - will retry on next interval
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
     }
   }, [baseUrl, clientId, token]);
 
   useEffect(() => {
-    fetchTemplates();
-    const interval = setInterval(fetchTemplates, 30000);
-    return () => clearInterval(interval);
+    const controller = new AbortController();
+    fetchTemplates(controller.signal);
+    const interval = setInterval(() => fetchTemplates(controller.signal), 30000);
+    return () => {
+      controller.abort();
+      clearInterval(interval);
+    };
   }, [fetchTemplates]);
 
   async function handleMediaUpload(file: File) {
