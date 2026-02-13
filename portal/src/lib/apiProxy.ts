@@ -42,6 +42,15 @@ function generateRequestId(): string {
   return `req_${ts}_${rand}`;
 }
 
+/** Mask secrets/tokens in log strings (Bearer tokens, API keys, etc.) */
+function maskSecrets(text: string): string {
+  return text
+    .replace(/Bearer\s+[A-Za-z0-9\-_\.]{8,}/gi, "Bearer ***")
+    .replace(/(sk-|EAAD|eyJ)[A-Za-z0-9\-_\.]{8,}/g, (m) => m.slice(0, 6) + "***")
+    .replace(/(token|key|secret|password|authorization)["']?\s*[:=]\s*["']?[^\s"',]{8,}/gi,
+      (m) => m.slice(0, 20) + "***");
+}
+
 function isBlockedHost(hostname: string): boolean {
   const clean = hostname.replace(/:\d+$/, "");
   return BLOCKED_HOST_PATTERNS.some((re) => re.test(clean));
@@ -264,7 +273,7 @@ export async function proxyToClickproApi(request: Request, pathSegments: string[
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), PROXY_TIMEOUT_MS);
 
-    console.log(`[apiProxy] [${requestId}] ${request.method} -> ${upstreamUrl.hostname}${upstreamUrl.pathname}`);
+    console.log(`[apiProxy] [${requestId}] ${request.method} ${upstreamUrl.pathname} -> ${upstreamUrl.hostname}`);
 
     let upstreamResponse: Response;
     try {
@@ -281,12 +290,12 @@ export async function proxyToClickproApi(request: Request, pathSegments: string[
 
     const duration = elapsed();
 
-    console.log(`[apiProxy] [${requestId}] upstream=${upstreamUrl.hostname} status=${upstreamResponse.status} duration=${duration}ms`);
+    console.log(`[apiProxy] [${requestId}] upstream=${upstreamUrl.hostname} path=${upstreamUrl.pathname} status=${upstreamResponse.status} duration=${duration}ms`);
 
     // --- 7. Handle upstream errors ---
     if (!upstreamResponse.ok) {
       const responseText = await upstreamResponse.text();
-      console.error(`[apiProxy] [${requestId}] Upstream error: status=${upstreamResponse.status} body=${responseText.slice(0, 500)}`);
+      console.error(`[apiProxy] [${requestId}] Upstream error: method=${request.method} path=${upstreamUrl.pathname} status=${upstreamResponse.status} body=${maskSecrets(responseText.slice(0, 500))}`);
 
       let errorData;
       try {
@@ -346,7 +355,7 @@ export async function proxyToClickproApi(request: Request, pathSegments: string[
 
     // Network errors (ECONNREFUSED, ENOTFOUND, etc.)
     if (isNetworkError(error)) {
-      console.error(`[apiProxy] [${requestId}] UPSTREAM_UNREACHABLE: ${error instanceof Error ? error.message : error}`);
+      console.error(`[apiProxy] [${requestId}] UPSTREAM_UNREACHABLE: ${maskSecrets(error instanceof Error ? error.message : String(error))}`);
       return makeErrorResponse(
         503,
         ErrorCode.UPSTREAM_UNREACHABLE,

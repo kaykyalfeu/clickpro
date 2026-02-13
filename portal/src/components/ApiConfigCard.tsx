@@ -1,10 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface ApiConfigCardProps {
-  baseUrl: string;
-  setBaseUrl: (value: string) => void;
   licenseKey: string;
   setLicenseKey: (value: string) => void;
   onActivate: () => void;
@@ -19,8 +17,6 @@ interface ApiConfigCardProps {
 }
 
 export default function ApiConfigCard({
-  baseUrl,
-  setBaseUrl,
   licenseKey,
   setLicenseKey,
   onActivate,
@@ -34,6 +30,19 @@ export default function ApiConfigCard({
   onSave,
 }: ApiConfigCardProps) {
   const [saved, setSaved] = useState(false);
+  const [upstreamStatus, setUpstreamStatus] = useState<{
+    configured: boolean;
+    host: string | null;
+  } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/config/upstream-status")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) setUpstreamStatus(data);
+      })
+      .catch(() => {});
+  }, []);
 
   function handleSave() {
     onSave();
@@ -42,19 +51,7 @@ export default function ApiConfigCard({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 rounded-2xl border border-slate-800 bg-slate-900/40 p-4 md:grid-cols-4">
-      <div>
-        <label className="text-xs text-slate-400">API Base URL</label>
-        <input
-          value={baseUrl}
-          onChange={(event) => setBaseUrl(event.target.value)}
-          className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
-          placeholder="https://sua-api.exemplo.com"
-        />
-        <p className="mt-2 text-xs text-slate-500">
-          Informe a URL do backend para evitar chamadas inválidas.
-        </p>
-      </div>
+    <div className="grid grid-cols-1 gap-4 rounded-2xl border border-slate-800 bg-slate-900/40 p-4 md:grid-cols-3">
       <div>
         <label className="text-xs text-slate-400">Client ID</label>
         <input
@@ -81,7 +78,23 @@ export default function ApiConfigCard({
           placeholder="Gerado automaticamente após ativação"
         />
       </div>
-      <div className="md:col-span-4">
+      {upstreamStatus && (
+        <div className="md:col-span-3">
+          <p className="text-xs text-slate-400">
+            API Backend:{" "}
+            {upstreamStatus.configured ? (
+              <span className="text-emerald-400" title="Configurado via CLICKPRO_API_URL no servidor">
+                {upstreamStatus.host} (configurado)
+              </span>
+            ) : (
+              <span className="text-red-400" title="Configure CLICKPRO_API_URL nas variáveis de ambiente do Vercel">
+                Não configurado — defina CLICKPRO_API_URL no Vercel
+              </span>
+            )}
+          </p>
+        </div>
+      )}
+      <div className="md:col-span-3">
         <button
           type="button"
           onClick={onActivate}
@@ -92,16 +105,16 @@ export default function ApiConfigCard({
         </button>
       </div>
       {activationError && (
-        <div className="md:col-span-4 rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+        <div className="md:col-span-3 rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
           {activationError}
         </div>
       )}
       {activationSuccess && (
-        <div className="md:col-span-4 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+        <div className="md:col-span-3 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
           {activationSuccess}
         </div>
       )}
-      <div className="md:col-span-4 flex items-center gap-3">
+      <div className="md:col-span-3 flex items-center gap-3">
         <button
           type="button"
           onClick={handleSave}

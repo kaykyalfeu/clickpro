@@ -23,12 +23,7 @@ interface Message {
   phone: string | null;
 }
 
-const defaultBaseUrl = process.env.NEXT_PUBLIC_CLICKPRO_API_URL
-  ?? process.env.NEXT_PUBLIC_API_BASE_URL
-  ?? "";
-
 export default function ConversationsPage() {
-  const [baseUrl, setBaseUrl] = useState(defaultBaseUrl);
   const [token, setToken] = useState("");
   const [clientId, setClientId] = useState("");
   const [licenseKey, setLicenseKey] = useState("");
@@ -51,12 +46,10 @@ export default function ConversationsPage() {
     const stored = localStorage.getItem("clickpro-config");
     if (stored) {
       const config = JSON.parse(stored) as {
-        baseUrl?: string;
         token?: string;
         clientId?: string;
         licenseKey?: string;
       };
-      if (config.baseUrl) setBaseUrl(config.baseUrl);
       if (config.clientId) setClientId(config.clientId);
       if (config.licenseKey) setLicenseKey(config.licenseKey);
       if (!storedJwt && config.token) setToken(config.token);
@@ -68,7 +61,6 @@ export default function ConversationsPage() {
 
   function saveConfig() {
     localStorage.setItem("clickpro-config", JSON.stringify({
-      baseUrl,
       token,
       clientId,
       licenseKey,
@@ -102,7 +94,6 @@ export default function ConversationsPage() {
       if (resolvedClientId) setClientId(resolvedClientId);
       localStorage.setItem("CLICKPRO_JWT", data.token);
       localStorage.setItem("clickpro-config", JSON.stringify({
-        baseUrl,
         token: data.token,
         clientId: resolvedClientId,
         licenseKey: licenseKey.trim(),
@@ -116,14 +107,14 @@ export default function ConversationsPage() {
   }
 
   const fetchConversations = useCallback(async function(signal?: AbortSignal) {
-    if (!baseUrl || !clientId || !token) {
+    if (!clientId || !token) {
       return;
     }
     setLoading(true);
     setError("");
     try {
       const response = await fetch(
-        `${baseUrl}/api/clients/${clientId}/conversations?search=${encodeURIComponent(search)}`,
+        `/api/clients/${clientId}/conversations?search=${encodeURIComponent(search)}`,
         {
           headers: { Authorization: `Bearer ${token}` },
           signal,
@@ -140,17 +131,17 @@ export default function ConversationsPage() {
     } finally {
       setLoading(false);
     }
-  }, [baseUrl, clientId, token, search]);
+  }, [clientId, token, search]);
 
   const fetchMessages = useCallback(async function(phone: string, signal?: AbortSignal) {
-    if (!baseUrl || !clientId || !token) {
+    if (!clientId || !token) {
       return;
     }
     setLoading(true);
     setError("");
     try {
       const response = await fetch(
-        `${baseUrl}/api/clients/${clientId}/messages?phone=${encodeURIComponent(phone)}`,
+        `/api/clients/${clientId}/messages?phone=${encodeURIComponent(phone)}`,
         {
           headers: { Authorization: `Bearer ${token}` },
           signal,
@@ -167,7 +158,7 @@ export default function ConversationsPage() {
     } finally {
       setLoading(false);
     }
-  }, [baseUrl, clientId, token]);
+  }, [clientId, token]);
 
   async function sendMessage() {
     if (!selectedPhone || !outboundMessage.trim()) {
@@ -176,7 +167,7 @@ export default function ConversationsPage() {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(`${baseUrl}/api/clients/${clientId}/messages/send`, {
+      const response = await fetch(`/api/clients/${clientId}/messages/send`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -237,8 +228,6 @@ export default function ConversationsPage() {
           </div>
 
           <ApiConfigCard
-            baseUrl={baseUrl}
-            setBaseUrl={setBaseUrl}
             licenseKey={licenseKey}
             setLicenseKey={setLicenseKey}
             onActivate={activateLicense}

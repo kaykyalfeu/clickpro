@@ -5,12 +5,7 @@ import ApiConfigCard from "@/components/ApiConfigCard";
 import DashboardHeader from "@/components/DashboardHeader";
 import { formatActivationError } from "@/lib/license.client";
 
-const defaultBaseUrl = process.env.NEXT_PUBLIC_CLICKPRO_API_URL
-  ?? process.env.NEXT_PUBLIC_API_BASE_URL
-  ?? "";
-
 export default function CredentialsPage() {
-  const [baseUrl, setBaseUrl] = useState(defaultBaseUrl);
   const [token, setToken] = useState("");
   const [clientId, setClientId] = useState("");
   const [licenseKey, setLicenseKey] = useState("");
@@ -41,12 +36,10 @@ export default function CredentialsPage() {
     const stored = localStorage.getItem("clickpro-config");
     if (stored) {
       const config = JSON.parse(stored) as {
-        baseUrl?: string;
         token?: string;
         clientId?: string;
         licenseKey?: string;
       };
-      if (config.baseUrl) setBaseUrl(config.baseUrl);
       if (config.clientId) setClientId(config.clientId);
       if (config.licenseKey) setLicenseKey(config.licenseKey);
       if (!storedJwt && config.token) setToken(config.token);
@@ -56,7 +49,6 @@ export default function CredentialsPage() {
 
   function saveConfig() {
     localStorage.setItem("clickpro-config", JSON.stringify({
-      baseUrl,
       token,
       clientId,
       licenseKey,
@@ -89,7 +81,6 @@ export default function CredentialsPage() {
       if (resolvedClientId) setClientId(resolvedClientId);
       localStorage.setItem("CLICKPRO_JWT", data.token);
       localStorage.setItem("clickpro-config", JSON.stringify({
-        baseUrl,
         token: data.token,
         clientId: resolvedClientId,
         licenseKey: licenseKey.trim(),
@@ -103,9 +94,9 @@ export default function CredentialsPage() {
   }
 
   const fetchStatus = useCallback(async function(signal?: AbortSignal) {
-    if (!baseUrl || !clientId || !token) return;
+    if (!clientId || !token) return;
     try {
-      const response = await fetch(`${baseUrl}/api/clients/${clientId}/credentials/status`, {
+      const response = await fetch(`/api/clients/${clientId}/credentials/status`, {
         headers: { Authorization: `Bearer ${token}` },
         signal,
       });
@@ -117,7 +108,7 @@ export default function CredentialsPage() {
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
     }
-  }, [baseUrl, clientId, token]);
+  }, [clientId, token]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -138,7 +129,7 @@ export default function CredentialsPage() {
     }
     setSavingOpenai(true);
     try {
-      const response = await fetch(`${baseUrl}/api/clients/${clientId}/credentials/openai`, {
+      const response = await fetch(`/api/clients/${clientId}/credentials/openai`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -178,7 +169,7 @@ export default function CredentialsPage() {
     }
     setSavingWhatsapp(true);
     try {
-      const response = await fetch(`${baseUrl}/api/clients/${clientId}/credentials/whatsapp`, {
+      const response = await fetch(`/api/clients/${clientId}/credentials/whatsapp`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -211,7 +202,7 @@ export default function CredentialsPage() {
     }
     setSavingLimits(true);
     try {
-      const response = await fetch(`${baseUrl}/api/clients/${clientId}/limits`, {
+      const response = await fetch(`/api/clients/${clientId}/limits`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -245,7 +236,7 @@ export default function CredentialsPage() {
     }
     setFetchingTier(true);
     try {
-      const response = await fetch(`${baseUrl}/api/clients/${clientId}/meta/tiers`, {
+      const response = await fetch(`/api/clients/${clientId}/meta/tiers`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -277,8 +268,6 @@ export default function CredentialsPage() {
             </p>
           </div>
           <ApiConfigCard
-            baseUrl={baseUrl}
-            setBaseUrl={setBaseUrl}
             licenseKey={licenseKey}
             setLicenseKey={setLicenseKey}
             onActivate={activateLicense}

@@ -16,12 +16,7 @@ interface TemplateItem {
   created_at: string;
 }
 
-const defaultBaseUrl = process.env.NEXT_PUBLIC_CLICKPRO_API_URL
-  ?? process.env.NEXT_PUBLIC_API_BASE_URL
-  ?? "";
-
 export default function TemplatesPage() {
-  const [baseUrl, setBaseUrl] = useState(defaultBaseUrl);
   const [token, setToken] = useState("");
   const [clientId, setClientId] = useState("");
   const [licenseKey, setLicenseKey] = useState("");
@@ -46,12 +41,10 @@ export default function TemplatesPage() {
     const stored = localStorage.getItem("clickpro-config");
     if (stored) {
       const config = JSON.parse(stored) as {
-        baseUrl?: string;
         token?: string;
         clientId?: string;
         licenseKey?: string;
       };
-      if (config.baseUrl) setBaseUrl(config.baseUrl);
       if (config.clientId) setClientId(config.clientId);
       if (config.licenseKey) setLicenseKey(config.licenseKey);
       if (!storedJwt && config.token) setToken(config.token);
@@ -61,7 +54,6 @@ export default function TemplatesPage() {
 
   function saveConfig() {
     localStorage.setItem("clickpro-config", JSON.stringify({
-      baseUrl,
       token,
       clientId,
       licenseKey,
@@ -94,7 +86,6 @@ export default function TemplatesPage() {
       if (resolvedClientId) setClientId(resolvedClientId);
       localStorage.setItem("CLICKPRO_JWT", data.token);
       localStorage.setItem("clickpro-config", JSON.stringify({
-        baseUrl,
         token: data.token,
         clientId: resolvedClientId,
         licenseKey: licenseKey.trim(),
@@ -108,9 +99,9 @@ export default function TemplatesPage() {
   }
 
   const fetchTemplates = useCallback(async function(signal?: AbortSignal) {
-    if (!baseUrl || !clientId || !token) return;
+    if (!clientId || !token) return;
     try {
-      const response = await fetch(`${baseUrl}/api/clients/${clientId}/templates`, {
+      const response = await fetch(`/api/clients/${clientId}/templates`, {
         headers: { Authorization: `Bearer ${token}` },
         signal,
       });
@@ -120,7 +111,7 @@ export default function TemplatesPage() {
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
     }
-  }, [baseUrl, clientId, token]);
+  }, [clientId, token]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -147,7 +138,7 @@ export default function TemplatesPage() {
         reader.onerror = () => reject(new Error("Falha ao ler arquivo."));
         reader.readAsDataURL(file);
       });
-      const response = await fetch(`${baseUrl}/api/clients/${clientId}/templates/media`, {
+      const response = await fetch(`/api/clients/${clientId}/templates/media`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -176,7 +167,7 @@ export default function TemplatesPage() {
     setError(null);
     setLoading(true);
     try {
-      const response = await fetch(`${baseUrl}/api/clients/${clientId}/templates`, {
+      const response = await fetch(`/api/clients/${clientId}/templates`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -220,8 +211,6 @@ export default function TemplatesPage() {
             </p>
           </div>
           <ApiConfigCard
-            baseUrl={baseUrl}
-            setBaseUrl={setBaseUrl}
             licenseKey={licenseKey}
             setLicenseKey={setLicenseKey}
             onActivate={activateLicense}
