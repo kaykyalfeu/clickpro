@@ -1,19 +1,14 @@
 export interface ContactsImportContext {
-  baseUrl: string;
   clientId: string;
   token: string;
   csvText: string;
 }
 
 export function getContactsImportError({
-  baseUrl,
   clientId,
   token,
   csvText,
 }: ContactsImportContext): string | null {
-  if (!baseUrl.trim()) {
-    return "Informe a URL base da API.";
-  }
   if (!clientId.trim()) {
     return "Informe o Client ID antes de importar.";
   }

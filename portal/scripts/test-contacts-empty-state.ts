@@ -52,16 +52,14 @@ assert.doesNotMatch(unauthenticatedHtml, /Sem permissão para importar/);
 assert.doesNotMatch(unauthenticatedHtml, /Importar contatos/);
 
 const errorNoConfig = getContactsImportError({
-  baseUrl: "",
   clientId: "",
   token: "",
   csvText: "",
 });
 
-assert.equal(errorNoConfig, "Informe a URL base da API.");
+assert.equal(errorNoConfig, "Informe o Client ID antes de importar.");
 
 const errorNoToken = getContactsImportError({
-  baseUrl: "http://localhost:3001",
   clientId: "1",
   token: "",
   csvText: "name,phone\nAna,5511999999999",
@@ -70,7 +68,6 @@ const errorNoToken = getContactsImportError({
 assert.equal(errorNoToken, "Ative sua licença para gerar o JWT antes de importar.");
 
 const noError = getContactsImportError({
-  baseUrl: "http://localhost:3001",
   clientId: "1",
   token: "token",
   csvText: "name,phone\nAna,5511999999999",

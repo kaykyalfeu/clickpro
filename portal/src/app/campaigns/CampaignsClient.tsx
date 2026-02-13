@@ -31,13 +31,8 @@ interface CampaignItem {
   sent_contacts: number;
 }
 
-const defaultBaseUrl = process.env.NEXT_PUBLIC_CLICKPRO_API_URL
-  ?? process.env.NEXT_PUBLIC_API_BASE_URL
-  ?? "";
-
 export default function CampaignsClient() {
   const { status: sessionStatus } = useSession();
-  const [baseUrl, setBaseUrl] = useState(defaultBaseUrl);
   const [token, setToken] = useState("");
   const [clientId, setClientId] = useState("");
   const [licenseKey, setLicenseKey] = useState("");
@@ -61,12 +56,10 @@ export default function CampaignsClient() {
     const stored = localStorage.getItem("clickpro-config");
     if (stored) {
       const config = JSON.parse(stored) as {
-        baseUrl?: string;
         token?: string;
         clientId?: string;
         licenseKey?: string;
       };
-      if (config.baseUrl) setBaseUrl(config.baseUrl);
       if (config.clientId) setClientId(config.clientId);
       if (config.licenseKey) setLicenseKey(config.licenseKey);
       if (!storedJwt && config.token) setToken(config.token);
@@ -78,7 +71,6 @@ export default function CampaignsClient() {
     localStorage.setItem(
       "clickpro-config",
       JSON.stringify({
-        baseUrl,
         token,
         clientId,
         licenseKey,
@@ -114,7 +106,6 @@ export default function CampaignsClient() {
       localStorage.setItem(
         "clickpro-config",
         JSON.stringify({
-          baseUrl,
           token: data.token,
           clientId: resolvedClientId,
           licenseKey: licenseKey.trim(),
@@ -129,9 +120,9 @@ export default function CampaignsClient() {
   }
 
   const fetchTemplates = useCallback(async function(signal?: AbortSignal) {
-    if (!baseUrl || !clientId || !token) return;
+    if (!clientId || !token) return;
     try {
-      const response = await fetch(`${baseUrl}/api/clients/${clientId}/templates`, {
+      const response = await fetch(`/api/clients/${clientId}/templates`, {
         headers: { Authorization: `Bearer ${token}` },
         signal,
       });
@@ -141,13 +132,13 @@ export default function CampaignsClient() {
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
     }
-  }, [baseUrl, clientId, token]);
+  }, [clientId, token]);
 
   const fetchContacts = useCallback(async function(signal?: AbortSignal) {
-    if (!baseUrl || !clientId || !token) return;
+    if (!clientId || !token) return;
     try {
       const response = await fetch(
-        `${baseUrl}/api/clients/${clientId}/contacts?search=${encodeURIComponent(search)}`,
+        `/api/clients/${clientId}/contacts?search=${encodeURIComponent(search)}`,
         {
           headers: { Authorization: `Bearer ${token}` },
           signal,
@@ -159,12 +150,12 @@ export default function CampaignsClient() {
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
     }
-  }, [baseUrl, clientId, token, search]);
+  }, [clientId, token, search]);
 
   const fetchCampaigns = useCallback(async function(signal?: AbortSignal) {
-    if (!baseUrl || !clientId || !token) return;
+    if (!clientId || !token) return;
     try {
-      const response = await fetch(`${baseUrl}/api/clients/${clientId}/campaigns`, {
+      const response = await fetch(`/api/clients/${clientId}/campaigns`, {
         headers: { Authorization: `Bearer ${token}` },
         signal,
       });
@@ -174,7 +165,7 @@ export default function CampaignsClient() {
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
     }
-  }, [baseUrl, clientId, token]);
+  }, [clientId, token]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -202,7 +193,7 @@ export default function CampaignsClient() {
     setError(null);
     setCreating(true);
     try {
-      const response = await fetch(`${baseUrl}/api/clients/${clientId}/campaigns`, {
+      const response = await fetch(`/api/clients/${clientId}/campaigns`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -249,8 +240,6 @@ export default function CampaignsClient() {
             </p>
           </div>
           <ApiConfigCard
-            baseUrl={baseUrl}
-            setBaseUrl={setBaseUrl}
             licenseKey={licenseKey}
             setLicenseKey={setLicenseKey}
             onActivate={activateLicense}
