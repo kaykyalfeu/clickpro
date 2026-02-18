@@ -1,33 +1,18 @@
-const http = require('http');
-const url = require('url');
-const { Pool } = require('pg');
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
+const { pool } = require('../lib/db');
+const requestHandler = require('../index.js');
 
 module.exports = async (req, res) => {
-  const parsedUrl = url.parse(req.url, true);
-  const path = parsedUrl.pathname.replace(/^\/+|\/+$/g, '');
-
-  // CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-  if (req.method === 'OPTIONS') {
-    res.writeHead(204);
-    res.end();
-    return;
-  }
-
-  // Health check
-  if (path === 'api/health' || path === 'health') {
+  // Adicionar suporte a health check rápido para o Vercel
+  if (req.url.endsWith('/health')) {
     try {
       const result = await pool.query('SELECT NOW()');
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ status: 'ok', database: 'connected', time: result.rows[0].now }));
+      res.end(JSON.stringify({ 
+        status: 'ok', 
+        database: 'connected', 
+        time: result.rows[0].now,
+        environment: 'vercel-serverless'
+      }));
     } catch (err) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ status: 'error', message: err.message }));
@@ -35,7 +20,6 @@ module.exports = async (req, res) => {
     return;
   }
 
-  // Default 404
-  res.writeHead(404);
-  res.end('Not Found');
+  // Chamar o handler principal do projeto
+  return requestHandler(req, res);
 };
