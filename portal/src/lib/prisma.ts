@@ -102,6 +102,14 @@ function createPrismaClient() {
   const rawUrl = process.env.DATABASE_URL;
 
   if (!rawUrl) {
+    // During build time, Next.js might import this module.
+    // We shouldn't throw an error if we're just building, unless it's a production build
+    // that actually needs the DB (which shouldn't happen for API routes).
+    if (process.env.NEXT_PHASE === "phase-production-build") {
+      console.warn("[PRISMA] DATABASE_URL is missing during build. This is fine if no pages require DB access at build time.");
+      return null as unknown as PrismaClient;
+    }
+
     const errorMsg = [
       "DATABASE_URL is not configured.",
       "",
