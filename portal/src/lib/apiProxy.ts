@@ -179,10 +179,31 @@ export async function proxyToClickproApi(request: Request, pathSegments: string[
       );
     }
 
-    // --- 2. Validate Authorization header ---
-    const authHeader = request.headers.get("authorization");
+    // --- 2. Validate Authorization header (with Cookie fallback) ---
+    let authHeader = request.headers.get("authorization");
+    const cookieHeader = request.headers.get("cookie") || "";
+    
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      console.error(`[apiProxy] [${requestId}] Missing or invalid Authorization header`);
+      // Fallback to CLICKPRO_JWT cookie (common in production Vercel)
+      const cookies = cookieHeader.split(";").reduce((acc, c) => {
+        const [name, ...val] = c.trim().split("=");
+        acc[name] = val.join("=");
+        return acc;
+      }, {} as Record<string, string>);
+      
+      // Check common Vercel/Next.js cookie prefixes
+      const jwtToken = cookies["CLICKPRO_JWT"] || 
+                       cookies["__Secure-CLICKPRO_JWT"] || 
+                       cookies["__Host-CLICKPRO_JWT"];
+      
+      if (jwtToken) {
+        authHeader = `Bearer ${jwtToken}`;
+        console.log(`[apiProxy] [${requestId}] Auth header missing, using CLICKPRO_JWT cookie fallback`);
+      }
+    }
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      console.error(`[apiProxy] [${requestId}] Missing or invalid Authorization (no header, no cookie)`);
       return makeErrorResponse(
         401,
         ErrorCode.MISSING_AUTHORIZATION,
@@ -192,6 +213,9 @@ export async function proxyToClickproApi(request: Request, pathSegments: string[
         elapsed(),
       );
     }
+
+    const tokenValue = authHeader.substring(7);
+    console.log(`[apiProxy] [${requestId}] hasAuthHeader=true tokenLast4=${tokenValue.slice(-4)}`);
 
     // --- 3. Resolve and validate upstream URL ---
     const upstreamResult = resolveUpstreamBase();
@@ -262,6 +286,8 @@ export async function proxyToClickproApi(request: Request, pathSegments: string[
     const headers = new Headers(request.headers);
     headers.delete("host");
     headers.delete("content-length");
+    headers.delete("cookie"); // Do not pass raw cookies to upstream
+    headers.set("authorization", authHeader); // Ensure the resolved Bearer token is sent
     headers.set("x-forwarded-host", requestHost || "unknown");
     headers.set("x-request-id", requestId);
 
