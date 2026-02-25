@@ -335,118 +335,62 @@ async function sendWhatsAppMessage(phone, text, config) {
         },
         body: JSON.stringify({
           messaging_product: 'whatsapp',
-          recipient_type: 'individual',
           to: phone,
           type: 'text',
           text: { body: text },
         }),
       },
     );
-
     const data = await response.json();
     if (!response.ok) {
-      console.error('[WhatsApp] Erro ao enviar:', data);
-    } else {
-      console.log('[WhatsApp] Mensagem enviada com sucesso:', data.messages[0].id);
+      console.error('[WhatsApp] Erro ao enviar mensagem:', data);
     }
   } catch (error) {
-    console.error('[WhatsApp] Falha na requisição:', error);
+    console.error('[WhatsApp] Falha na requisição de envio:', error);
   }
 }
 
 async function generateAIResponse(clientId, text, config) {
   if (!config?.apiKey || !config?.assistantId) {
-    return '';
+    return null;
   }
 
   try {
-    const threadResponse = await fetch('https://api.openai.com/v1/threads', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${config.apiKey}`,
-        'OpenAI-Beta': 'assistants=v1',
-      },
-    });
-    const thread = await threadResponse.json();
-
-    await fetch(`https://api.openai.com/v1/threads/${thread.id}/messages`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${config.apiKey}`,
-        'OpenAI-Beta': 'assistants=v1',
       },
       body: JSON.stringify({
-        role: 'user',
-        content: text,
+        model: 'gpt-3.5-turbo',
+        messages: [
+          { role: 'system', content: config.commandPrompt || 'Você é um assistente prestativo.' },
+          { role: 'user', content: text },
+        ],
       }),
     });
-
-    const runResponse = await fetch(`https://api.openai.com/v1/threads/${thread.id}/runs`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${config.apiKey}`,
-        'OpenAI-Beta': 'assistants=v1',
-      },
-      body: JSON.stringify({
-        assistant_id: config.assistantId,
-        instructions: config.commandPrompt,
-      }),
-    });
-    const run = await runResponse.json();
-
-    let status = run.status;
-    while (status === 'queued' || status === 'in_progress') {
-      await new Promise((r) => setTimeout(r, 1000));
-      const checkResponse = await fetch(
-        `https://api.openai.com/v1/threads/${thread.id}/runs/${run.id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${config.apiKey}`,
-            'OpenAI-Beta': 'assistants=v1',
-          },
-        },
-      );
-      const check = await checkResponse.json();
-      status = check.status;
-    }
-
-    if (status === 'completed') {
-      const messagesResponse = await fetch(
-        `https://api.openai.com/v1/threads/${thread.id}/messages`,
-        {
-          headers: {
-            Authorization: `Bearer ${config.apiKey}`,
-            'OpenAI-Beta': 'assistants=v1',
-          },
-        },
-      );
-      const list = await messagesResponse.json();
-      const lastMessage = list.data.find((m) => m.role === 'assistant');
-      return lastMessage?.content[0]?.text?.value || '';
-    }
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || null;
   } catch (error) {
-    console.error('[OpenAI] Erro:', error);
+    console.error('[AI] Erro ao gerar resposta:', error);
+    return null;
   }
-
-  return '';
 }
 
 async function handleIncomingMessage(clientId, phone, text) {
   const normalizedPhone = normalizePhone(phone);
-  messages.push({ role: 'user', content: text, phone: normalizedPhone });
-
-  const contact = await ensureContact(clientId, normalizedPhone);
-  await logMessage(clientId, contact.id, 'INBOUND', text, 'WEBHOOK', 'RECEIVED');
-
   if (await isOptedOut(clientId, normalizedPhone)) {
     return;
   }
 
+  const contact = await ensureContact(clientId, normalizedPhone);
+  await logMessage(clientId, contact.id, 'INBOUND', text, 'WHATSAPP', 'RECEIVED');
+
+  messages.push({ role: 'user', content: text, phone: normalizedPhone });
+
+  let aiResponse = null;
   const client = await db.prepare('SELECT ai_enabled FROM clients WHERE id = ?').get(clientId);
-  let aiResponse = '';
 
   if (client && client.ai_enabled) {
     const openAiConfig = await getOpenAiCredentials(clientId);
@@ -511,16 +455,58 @@ const requestHandler = async (req, res) => {
       sendJson(res, 200, { status: 'ok' });
     } else if (path.startsWith('api/')) {
       const apiPath = path.substring(4);
-      const user = requireJwt(req, res, ['SUPER_ADMIN', 'ADMIN']);
+      const user = requireJwt(req, res, ['SUPER_ADMIN', 'ADMIN', 'CLIENT_USER']);
       if (!user) return;
 
       if (apiPath === 'clients' && req.method === 'GET') {
         const clients = await db.prepare('SELECT id, name FROM clients').all();
         sendJson(res, 200, clients);
-      } else if (apiPath.match(/^clients\/(\d+)$/) && req.method === 'GET') {
-        const clientId = parseInt(apiPath.split('/')[1], 10);
+      } else if (apiPath.match(/^clients\/([^\/]+)$/) && req.method === 'GET') {
+        const clientId = apiPath.split('/')[1];
         const client = await db.prepare('SELECT * FROM clients WHERE id = ?').get(clientId);
         sendJson(res, 200, client);
+      } else if (apiPath.match(/^clients\/([^\/]+)\/credentials\/status$/) && req.method === 'GET') {
+        const clientId = apiPath.split('/')[1];
+        const openai = await db.prepare('SELECT id FROM openai_credentials WHERE client_id = ?').get(clientId);
+        const whatsapp = await db.prepare('SELECT id FROM whatsapp_credentials WHERE client_id = ?').get(clientId);
+        const client = await db.prepare('SELECT ai_daily_limit, meta_tier_limit FROM clients WHERE id = ?').get(clientId);
+        sendJson(res, 200, {
+          openaiSet: !!openai,
+          whatsappSet: !!whatsapp,
+          aiDailyLimit: client?.ai_daily_limit || 0,
+          metaTierLimit: client?.meta_tier_limit || 0
+        });
+      } else if (apiPath.match(/^clients\/([^\/]+)\/credentials\/openai$/) && req.method === 'POST') {
+        const clientId = apiPath.split('/')[1];
+        const body = JSON.parse(await readBody(req));
+        const { apiKey, assistantId, commandPrompt } = body;
+        const apiKeyEnc = encryptSecret(apiKey);
+        
+        await db.prepare('DELETE FROM openai_credentials WHERE client_id = ?').run(clientId);
+        await db.prepare('INSERT INTO openai_credentials (client_id, api_key_enc, assistant_id, command_prompt, created_at) VALUES (?, ?, ?, ?, ?)')
+          .run(clientId, apiKeyEnc, assistantId, commandPrompt, nowIso());
+        
+        sendJson(res, 200, { ok: true });
+      } else if (apiPath.match(/^clients\/([^\/]+)\/credentials\/whatsapp$/) && req.method === 'POST') {
+        const clientId = apiPath.split('/')[1];
+        const body = JSON.parse(await readBody(req));
+        const { token, phoneNumberId, cloudNumber, businessId } = body;
+        const tokenEnc = encryptSecret(token);
+        
+        await db.prepare('DELETE FROM whatsapp_credentials WHERE client_id = ?').run(clientId);
+        await db.prepare('INSERT INTO whatsapp_credentials (client_id, token_enc, phone_number_id, cloud_number, business_id, created_at) VALUES (?, ?, ?, ?, ?, ?)')
+          .run(clientId, tokenEnc, phoneNumberId, cloudNumber, businessId, nowIso());
+        
+        sendJson(res, 200, { ok: true });
+      } else if (apiPath.match(/^clients\/([^\/]+)\/credentials\/limits$/) && req.method === 'POST') {
+        const clientId = apiPath.split('/')[1];
+        const body = JSON.parse(await readBody(req));
+        const { aiDailyLimit, metaTierLimit } = body;
+        
+        await db.prepare('UPDATE clients SET ai_daily_limit = ?, meta_tier_limit = ? WHERE id = ?')
+          .run(parseInt(aiDailyLimit, 10), parseInt(metaTierLimit, 10), clientId);
+        
+        sendJson(res, 200, { ok: true });
       } else {
         sendJson(res, 404, { error: 'API endpoint not found.' });
       }
